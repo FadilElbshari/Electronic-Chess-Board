@@ -1,0 +1,59 @@
+C51 COMPILER V9.60.7.0   HELPERS                                                           12/22/2025 23:54:49 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE HELPERS
+OBJECT MODULE PLACED IN .\Objects\helpers.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\helpers.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listin
+                    -gs\helpers.lst) TABS(2) OBJECT(.\Objects\helpers.obj)
+
+line level    source
+
+   1          #include "helpers.h"
+   2          
+   3          #include <REG52.H>
+   4          
+   5          // ==============================================================================
+   6          // =========================Delay Functionality START ===========================
+   7          // ==============================================================================
+   8          void timer0_delay1ms(void) {
+   9   1          TMOD |= 0x01;
+  10   1          
+  11   1          TH0 = 0xFC;
+  12   1          TL0 = 0x67;
+  13   1      
+  14   1          TF0 = 0;
+  15   1          TR0 = 1;
+  16   1          while(TF0 == 0);
+  17   1          TR0 = 0;
+  18   1      }
+  19          
+  20          
+  21          void delay_ms(unsigned int ms) {
+  22   1          unsigned int i;
+  23   1          for(i = 0; i < ms; i++) {
+  24   2              timer0_delay1ms();
+  25   2          }
+  26   1      }
+  27          
+  28          U8 popcount(U8 x) {
+  29   1          U8 c = 0;
+  30   1          while (x) { x &= (x - 1); c++; }
+  31   1          return c;
+  32   1      }
+  33          // ==============================================================================
+  34          // =========================Delay Functionality END =============================
+  35          // ==============================================================================
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     54    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

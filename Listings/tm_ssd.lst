@@ -1,0 +1,108 @@
+C51 COMPILER V9.60.7.0   TM_SSD                                                            12/22/2025 23:54:49 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TM_SSD
+OBJECT MODULE PLACED IN .\Objects\tm_ssd.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\tm_ssd.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listing
+                    -s\tm_ssd.lst) TABS(2) OBJECT(.\Objects\tm_ssd.obj)
+
+line level    source
+
+   1          #include "tm_ssd.h"
+   2          
+   3          #include <REG52.H>
+   4          #include <intrins.h>
+   5          #include "types.h"
+   6          #include "hardware.h"
+   7          
+   8          // ===============================================================================
+   9          // =========================Seven Segment Display START===========================
+  10          // ===============================================================================
+  11          
+  12          // ============================ Useful Constant Values ===============================
+  13          const U8 xdata seg_table[18] = {
+  14                  0x3F,0x06,0x5B,0x4F,0x66, // 0-4
+  15                  0x6D,0x7D,0x07,0x7F,0x6F, // 5-9
+  16                0x77,0x7C,0x39,0x5E,0x79,0x71,0x3D,0x76, // A-E
+  17          };
+  18          
+  19          void tm_delay_us(void) {
+  20   1          _nop_(); // Instead of a loop
+  21   1      }
+  22          
+  23          
+  24          void tm_start(void) {
+  25   1          SSD_DIO = 1;
+  26   1          SSD_CLK = 1;
+  27   1          tm_delay_us();
+  28   1          SSD_DIO = 0;
+  29   1          tm_delay_us();
+  30   1          SSD_CLK = 0;
+  31   1      }
+  32          void tm_stop(void) {
+  33   1          SSD_CLK = 0;
+  34   1          tm_delay_us();
+  35   1          SSD_DIO = 0;
+  36   1          tm_delay_us();
+  37   1          SSD_CLK = 1;
+  38   1          tm_delay_us();
+  39   1          SSD_DIO = 1;
+  40   1      }
+  41          void tm_send_byte(U8 b) {
+  42   1          U8 i;
+  43   1          for (i = 0; i < 8; i++) {
+  44   2              SSD_CLK = 0;                // clock low before setting data
+  45   2              SSD_DIO = (b & 0x01);       // send LSB first
+  46   2              tm_delay_us();
+  47   2              SSD_CLK = 1;                // clock high: latch bit
+  48   2              tm_delay_us();
+  49   2              b >>= 1;
+  50   2          }
+  51   1      
+  52   1          // ACK bit
+  53   1          SSD_CLK = 0;
+  54   1          SSD_DIO = 1; // release data line
+C51 COMPILER V9.60.7.0   TM_SSD                                                            12/22/2025 23:54:49 PAGE 2   
+
+  55   1          tm_delay_us();
+  56   1          SSD_CLK = 1;
+  57   1          tm_delay_us();
+  58   1          SSD_CLK = 0;
+  59   1      }
+  60          void tm_send_command(U8 cmd) {
+  61   1          tm_start();
+  62   1          tm_send_byte(cmd);
+  63   1          tm_stop();
+  64   1      }
+  65          void tm_display_digits(U8 d0, U8 d1, U8 d2, U8 d3) {
+  66   1          // Segment data for 0–9
+  67   1      
+  68   1          tm_send_command(0x40); // set auto-increment mode
+  69   1      
+  70   1          tm_start();
+  71   1          tm_send_byte(0xC0); // start address 0
+  72   1          tm_send_byte(seg_table[d0]);  
+  73   1          tm_send_byte(seg_table[d1]);
+  74   1          tm_send_byte(seg_table[d2]);
+  75   1          tm_send_byte(seg_table[d3]);
+  76   1          tm_stop();
+  77   1      
+  78   1          tm_send_command(0x8F); // display ON, max brightness
+  79   1      }
+  80          // ==============================================================================
+  81          // =========================Seven Segment Display END ===========================
+  82          // ==============================================================================
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    130    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     18    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

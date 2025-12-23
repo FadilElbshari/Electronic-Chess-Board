@@ -1,0 +1,1 @@
+"src\shift_registers.c" OPTIMIZE (8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\shift_registers.lst) TABS (2) OBJECT(.\Objects\shift_registers.obj)
