@@ -2,14 +2,11 @@
 #define TYPES_H
 
 // Type Definitions
+#define BOARD_W 4
 typedef unsigned char U8;
 typedef struct {
-	U8 RANK[4];
+	U8 RANK[BOARD_W];
 } Bitboard;
-
-typedef struct {
-	U8 RANK[8];
-} Bitboard_8x8;
 
 typedef enum {
 	TURNED_ON,
@@ -30,5 +27,36 @@ typedef enum {
 	RECEIVING_POSITION,
 	WAITING
 } ISRState;
+
+
+#define COLOR_WHITE  0x40
+#define COLOR_BLACK  0x00
+#define TYPE_MASK    0x07
+typedef enum {
+  TYPE_EMPTY = 0,
+  TYPE_PAWN,
+  TYPE_KNIGHT,
+  TYPE_BISHOP,
+	TYPE_ROOK,
+  TYPE_QUEEN,
+  TYPE_KING
+} PieceType;
+
+#define EMPTY (TYPE_EMPTY)
+
+#define PAWN_W (TYPE_PAWN | COLOR_WHITE)
+#define KNIGHT_W (TYPE_KNIGHT| COLOR_WHITE)
+#define BISHOP_W (TYPE_BISHOP| COLOR_WHITE)
+#define ROOK_W (TYPE_ROOK | COLOR_WHITE)
+#define QUEEN_W (TYPE_QUEEN | COLOR_WHITE)
+#define KING_W (TYPE_KING | COLOR_WHITE)
+
+#define PAWN_B (TYPE_PAWN | COLOR_BLACK)
+#define KNIGHT_B (TYPE_KNIGHT| COLOR_BLACK)
+#define BISHOP_B (TYPE_BISHOP| COLOR_BLACK)
+#define ROOK_B (TYPE_ROOK | COLOR_BLACK)
+#define QUEEN_B (TYPE_QUEEN | COLOR_BLACK)
+#define KING_B (TYPE_KING | COLOR_BLACK)
+
 
 #endif

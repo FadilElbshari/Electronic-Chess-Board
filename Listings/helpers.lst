@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   HELPERS                                                           12/22/2025 23:54:49 PAGE 1   
+C51 COMPILER V9.60.7.0   HELPERS                                                           12/25/2025 23:43:24 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE HELPERS
@@ -37,16 +37,17 @@ line level    source
   27          
   28          U8 popcount(U8 x) {
   29   1          U8 c = 0;
-  30   1          while (x) { x &= (x - 1); c++; }
-  31   1          return c;
-  32   1      }
-  33          // ==============================================================================
-  34          // =========================Delay Functionality END =============================
-  35          // ==============================================================================
+  30   1          x &= 0x0F; // mask to keep only the least significant 4 bits
+  31   1          while (x) { x &= (x - 1); c++; }
+  32   1          return c;
+  33   1      }
+  34          // ==============================================================================
+  35          // =========================Delay Functionality END =============================
+  36          // ==============================================================================
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     54    ----
+   CODE SIZE        =     57    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

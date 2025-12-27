@@ -11,18 +11,10 @@
 #include "shift_registers.h"
 #include "tm_ssd.h"
 #include "interrupts.h"
-
-// Shift Registers
-
+#include "move_gen.h"
+		
 
 		
-const U8 xdata FILES_5[5] = {'a', 'b', 'c', 'd', 'e'}; // Cols
-const U8 xdata RANKS_5[5] = {'1', '2', '3', '4', '5'}; // Rows
-
-const Bitboard xdata ZeroBoard = {{0x00, 0x00, 0x00, 0x00}};
-const Bitboard xdata OneBoard = {{0xFF, 0xFF, 0xFF, 0xFF}};
-
-
 bit JustEnteredState = 1;
 MainState CurrentMainState = TURNED_ON;
 DetectionState CurrentDetectionState = NONE;
@@ -33,6 +25,8 @@ int main(void) {
 	uart_init();
 	init_shift_reg();
 	set_leds(&ZeroBoard);
+	
+	TURN = BLACK;
 	
 	DelayCounter = 10;
 	while (1) {
@@ -54,7 +48,7 @@ int main(void) {
 				}
 				break;
 				
-			
+			// AWAIT_POSITION_SET STATE MANAGEMENT
 			case AWAIT_POSITION_SET:
 				
 				if (JustEnteredState && LED_READY) {
@@ -82,7 +76,7 @@ int main(void) {
 				CurrentMainState = DETECTING;
 				break;
 			
-			
+			// DETECTION STATE MANAGEMENT
 			case DETECTING:
 				if (JustEnteredState) {
 					JustEnteredState = 0;
@@ -90,67 +84,104 @@ int main(void) {
 					DelayCounter = 2;
 				}
 				
-				switch (CurrentDetectionState) {
-					case NONE:
-						if (DelayCounter != 0) break;
-						if (!read_and_verify_sensors()) {
+				if (LED_READY) {
+					LED_READY = 0;
+					set_leds(&LegalMoves);
+					DelayCounter = 2;
+				}
+
+				if (DelayCounter != 0) break;
+				
+				if (!read_and_verify_sensors()) {
 							DelayCounter = 2;
 							break;
-						}
+				}
 						
-						MATCH = compare_boards(&CurrentBoard, &PolledBoard);
+				MATCH = compare_boards(&CurrentBoard, &PolledBoard);
 
-						if (!MATCH) {
-							JustEnteredState = 1;
-							CurrentMainState = CHANGE_DETECTED;
-							break;
-						}
-
-						DelayCounter = 2;
+				if (!MATCH) {
+					JustEnteredState = 1;
+					CurrentMainState = CHANGE_DETECTED;
+					break;
+				}
+				
+				set_leds(&ZeroBoard);
+				switch (CurrentDetectionState) {
+					case NONE:
 						break;
-					
+						
 					case LIFT:
-						if (LED_READY) {
-							LED_READY = 0;
-							set_leds(&DisplayBoardLEDs);
-						}
-						break;
-						
-			}
+            // Piece returned
+					  get_left_entered(&CurrentBoard, &PolledBoard);
+            if (get_bit_count(LeftMask) == 0 && get_bit_count(EnteredMask) == 0) { CurrentDetectionState = NONE; set_leds(&ZeroBoard);}
+            break;
+				}
+				
+				DelayCounter = 2;
 				break;
 				
-				
+			// CHANGE_DETECTED STATE MANAGEMENT	
 			case CHANGE_DETECTED:
-				if (JustEnteredState) {
-					U8 i, j;
+
+				if (JustEnteredState) JustEnteredState = 0;
+					
 					JustEnteredState = 0;
-					//figure_out_move(&CurrentBoard, &PolledBoard);
 					get_left_entered(&CurrentBoard, &PolledBoard);
 					
 					switch (CurrentDetectionState){
+						U8 i, j;
 						case NONE:
-							if (get_bit_count(LeftMask) == 1) {
+							if (get_bit_count(LeftMask) == 1 && get_bit_count(EnteredMask) == 0) {
+								bit found;
+								found = 0;
+								
 								CurrentDetectionState = LIFT;
-								JustEnteredState = 1;
 								CurrentMainState = DETECTING;
+								JustEnteredState = 1;
+								
 								for (i=0; i<4; i++) {
+									if (found) break;
 									for (j=0; j<4; j++) {
 										if ((LeftMask.RANK[i] >> j) & 1) {
-											uart_send_char(LIFT_FLAG);
-											uart_send_char(i+'0');
-											uart_send_char(j+'0');
+											LegalMoves = get_legal_moves(i*4 + j);
+											LED_READY = 1;
+											found = 1;
 											break;
 										}
 									}
 								}
-							} else if (get_bit_count(EnteredMask) > 0) {
-									CurrentMainState = ERROR_FLASH_ON;
-									break;
+								break;
 							}
-						break;
-					}
+							CurrentMainState = ERROR_FLASH_ON;
+							break;
+							
 					
-				}
+						case LIFT:
+							// Piece still lifted
+							if (get_bit_count(LeftMask) == 1 && get_bit_count(EnteredMask) == 0) {
+								CurrentMainState = DETECTING; 
+								break;
+								
+							// Piece placed on new square, check if legal
+							} else if (get_bit_count(LeftMask) == 1 && get_bit_count(EnteredMask) == 1) {
+								bit legal;
+								legal = 0;
+								
+								for (i=0; i<4; i++) {
+									if (EnteredMask.RANK[i] & LegalMoves.RANK[i]) {
+											legal = 1;
+											break;
+									}
+								}
+								
+								if (!legal) {CurrentMainState = ERROR_FLASH_ON; uart_send_char('I'); break;}
+								CurrentDetectionState = NONE;
+								CurrentMainState = DETECTING;
+								uart_send_char('M');
+							}
+							
+							break;
+						}
 			
 				break;
 				
@@ -181,3 +212,4 @@ int main(void) {
 		delay_ms(10);
 	}
 }
+

@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "config.h"
+#include "bitboard.h"
 
 
 /* ================= Serial ISR variables ================= */
@@ -34,8 +35,26 @@ void serial_ISR(void) interrupt 4 {
 						break;
 						
 					case RECEIVING_POSITION:
-						DisplayBoardLEDs.RANK[3-(ReceivingPositionCounter++)] = c;
-						if (ReceivingPositionCounter == 4) {
+						if ((c & TYPE_MASK) == TYPE_KING) {
+							bit piece_turn;
+							piece_turn = (c & COLOR_WHITE) != 0;
+							
+							KingSquares[piece_turn] = ReceivingPositionCounter;
+						}
+						BoardState[ReceivingPositionCounter++] = c;
+						if (ReceivingPositionCounter == 16) {
+							U8 i, j;
+							
+							DisplayBoardLEDs = ZeroBoard;
+							
+							for (i=0; i<4; i++){
+								for (j=0; j<4; j++) {
+									if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
+										DisplayBoardLEDs.RANK[i] |= (1 << j);
+									}
+								}
+							}
+							
 							ReceivingPositionCounter = 0;
 							CurrentISRState = WAITING;
 							LED_READY = 1;

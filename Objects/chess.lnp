@@ -5,7 +5,8 @@
 ".\Objects\helpers.obj",
 ".\Objects\shift_registers.obj",
 ".\Objects\bitboard.obj",
-".\Objects\interrupts.obj" 
+".\Objects\interrupts.obj",
+".\Objects\move_gen.obj" 
 TO ".\Objects\chess" 
 PRINT(".\Listings\chess.m51") RAMSIZE(256) 
 CODE( 0X0000-0X1FFF )

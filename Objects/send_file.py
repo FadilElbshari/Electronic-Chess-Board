@@ -4,7 +4,7 @@ import time
 
 ACK = b'\x06'  # Arduino sends this when ready for next line
 NAK = b'\x15'  # Arduino sends this on error
-TIMEOUT = 5    # seconds to wait for response
+TIMEOUT = 0.5    # seconds to wait for response
 
 file_name = sys.argv[1]
 port = sys.argv[2]
@@ -24,16 +24,16 @@ with open(file_name, 'r') as file:
 
         # send the line to Arduino
         ser.write(line.encode() + b'\n')
-        print(f"{count}. Sent: {line}", end="  ")
+        print(f"\rLine {count} sent", end="", flush=True)
         count += 1
 
         # wait for Arduino to confirm
         resp = ser.read(1)
         if resp == ACK:
-            print("✅ ACK")
+            #print("✅ ACK")
             continue
         elif resp == NAK:
-            print("❌ NAK (Arduino error)")
+            #print("❌ NAK (Arduino error)")
             # optionally retry
             continue
         else:

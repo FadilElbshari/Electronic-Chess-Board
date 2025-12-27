@@ -1,0 +1,1 @@
+"src\move_gen.c" OPTIMIZE (8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\move_gen.lst) TABS (2) OBJECT(.\Objects\move_gen.obj)

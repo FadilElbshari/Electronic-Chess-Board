@@ -27,6 +27,7 @@ void delay_ms(unsigned int ms) {
 
 U8 popcount(U8 x) {
     U8 c = 0;
+		x &= 0x0F; // mask to keep only the least significant 4 bits
     while (x) { x &= (x - 1); c++; }
     return c;
 }

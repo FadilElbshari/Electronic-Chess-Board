@@ -416,6 +416,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\interrupts.c</FilePath>
             </File>
+            <File>
+              <FileName>move_gen.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\move_gen.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
