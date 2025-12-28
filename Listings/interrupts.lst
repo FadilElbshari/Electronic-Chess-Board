@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        12/27/2025 19:59:21 PAGE 1   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        12/28/2025 16:02:15 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE INTERRUPTS
@@ -13,82 +13,94 @@ line level    source
    3          
    4          #include "types.h"
    5          #include "config.h"
-   6          #include "bitboard.h"
-   7          
+   6          #include "uart.h"
+   7          #include "bitboard.h"
    8          
-   9          /* ================= Serial ISR variables ================= */
-  10          
-  11          volatile bit ReceivingLedState = 0;
-  12          volatile bit LED_READY = 0;
-  13          volatile bit CONNECTED = 0;
-  14          
-  15          volatile U8 xdata ReceivingLEDsCounter = 0;
-  16          volatile U8 xdata ReceivingPositionCounter = 0;
-  17          
-  18          volatile ISRState CurrentISRState = NOT_CONNECTED;
-  19          volatile Bitboard xdata DisplayBoardLEDs = {{0x00, 0x00, 0x00, 0x00}};
-  20          
-  21          /* ======================================================== */
-  22          
-  23          void serial_ISR(void) interrupt 4 {
-  24   1          if (RI) {
-  25   2              U8 c;
-  26   2              c = SBUF;
-  27   2              RI = 0;
-  28   2              
-  29   2              switch (CurrentISRState) {
-  30   3                case NOT_CONNECTED:
-  31   3                  if (c == CONNECTION_FLAG) {
-  32   4                    CONNECTED = 1;
-  33   4                    CurrentISRState = RECEIVING_POSITION;
-  34   4                  }
-  35   3                  break;
-  36   3                  
-  37   3                case RECEIVING_POSITION:
-  38   3                  if ((c & TYPE_MASK) == TYPE_KING) {
-  39   4                    bit piece_turn;
-  40   4                    piece_turn = (c & COLOR_WHITE) != 0;
-  41   4                    
-  42   4                    KingSquares[piece_turn] = ReceivingPositionCounter;
-  43   4                  }
-  44   3                  BoardState[ReceivingPositionCounter++] = c;
-  45   3                  if (ReceivingPositionCounter == 16) {
-  46   4                    U8 i, j;
-  47   4                    
-  48   4                    DisplayBoardLEDs = ZeroBoard;
-  49   4                    
-  50   4                    for (i=0; i<4; i++){
-  51   5                      for (j=0; j<4; j++) {
-  52   6                        if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
-  53   7                          DisplayBoardLEDs.RANK[i] |= (1 << j);
-  54   7                        }
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        12/27/2025 19:59:21 PAGE 2   
+   9          
+  10          /* ================= Serial ISR variables ================= */
+  11          
+  12          volatile bit ReceivingLedState = 0;
+  13          volatile bit LED_READY = 0;
+  14          volatile bit CONNECTED = 0;
+  15          
+  16          volatile U8 xdata ReceivingLEDsCounter = 0;
+  17          volatile U8 xdata ReceivingPositionCounter = 0;
+  18          
+  19          volatile ISRState CurrentISRState = NOT_CONNECTED;
+  20          volatile Bitboard xdata DisplayBoardLEDs = {{0x00, 0x00, 0x00, 0x00}};
+  21          
+  22          /* ======================================================== */
+  23          
+  24          void serial_ISR(void) interrupt 4 {
+  25   1          if (RI) {
+  26   2              U8 c;
+  27   2              c = SBUF;
+  28   2              RI = 0;
+  29   2              
+  30   2              switch (CurrentISRState) {
+  31   3                case NOT_CONNECTED:
+  32   3                  if (c == CONNECTION_FLAG) {
+  33   4                    CONNECTED = 1;
+  34   4                    CurrentISRState = RECEIVING_POSITION;
+  35   4                  }
+  36   3                  break;
+  37   3                  
+  38   3                case RECEIVING_POSITION:
+  39   3                  if ((c & TYPE_MASK) == TYPE_KING) {
+  40   4                    bit piece_turn;
+  41   4                    piece_turn = (c & COLOR_WHITE) != 0;
+  42   4                    
+  43   4                    KingSquares[piece_turn] = ReceivingPositionCounter;
+  44   4                  }
+  45   3                  BoardState[ReceivingPositionCounter++] = c;
+  46   3                  if (ReceivingPositionCounter == 16) {
+  47   4                    U8 i, j;
+  48   4                    
+  49   4                    DisplayBoardLEDs = ZeroBoard;
+  50   4                    
+  51   4                    for (i=0; i<4; i++){
+  52   5                      for (j=0; j<4; j++) {
+  53   6                        if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
+  54   7                          DisplayBoardLEDs.RANK[i] |= (1 << j);
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        12/28/2025 16:02:15 PAGE 2   
 
-  55   6                      }
-  56   5                    }
-  57   4                    
-  58   4                    ReceivingPositionCounter = 0;
-  59   4                    CurrentISRState = WAITING;
-  60   4                    LED_READY = 1;
-  61   4                  }
-  62   3                  break;
-  63   3                  
-  64   3                case WAITING:
-  65   3                  if (c == LEGAL_MOVE_FLAG) {
-  66   4                    CurrentISRState = RECEIVING_POSITION;
-  67   4                  }
-  68   3                  break;
-  69   3                  
-  70   3              }
-  71   2              
-  72   2              return;
-  73   2              }
-  74   1              
-  75   1      }
+  55   7                        }
+  56   6                      }
+  57   5                    }
+  58   4                    
+  59   4                    ReceivingPositionCounter = 0;
+  60   4                    CurrentISRState = WAITING;
+  61   4                    LED_READY = 1;
+  62   4                  }
+  63   3                  break;
+  64   3                  
+  65   3                case WAITING:
+  66   3                  if (c == LEGAL_MOVE_FLAG) {
+  67   4                    CurrentISRState = RECEIVING_POSITION;
+  68   4                  }
+  69   3                  break;
+  70   3                  
+  71   3              }
+  72   2              
+  73   2              return;
+  74   2              }
+  75   1          
+  76   1            if (TI) {
+  77   2              TI = 0;
+  78   2      
+  79   2              if (tx_tail != tx_head) {
+  80   3                  SBUF = tx_buf[tx_tail];
+  81   3                  tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
+  82   3              } else {
+  83   3                  tx_busy = 0;   // Nothing left to send
+  84   3              }
+  85   2          }
+  86   1              
+  87   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    284    ----
+   CODE SIZE        =    332    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =      6    ----
    PDATA SIZE       =   ----    ----

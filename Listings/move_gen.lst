@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/27/2025 19:59:21 PAGE 1   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/28/2025 00:04:18 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MOVE_GEN
@@ -62,7 +62,7 @@ line level    source
   52   2                  get_bishop_moves(sq, &pseudo_board);
   53   2                  break;
   54   2              case TYPE_ROOK:
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/27/2025 19:59:21 PAGE 2   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/28/2025 00:04:18 PAGE 2   
 
   55   2                  get_rook_moves(sq, &pseudo_board);
   56   2                  break;
@@ -126,7 +126,7 @@ line level    source
  114   2              r = rank + dr[i];
  115   2              f = file + df[i];
  116   2      
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/27/2025 19:59:21 PAGE 3   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/28/2025 00:04:18 PAGE 3   
 
  117   2              if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
  118   2                  continue;
@@ -190,7 +190,7 @@ line level    source
  176   2      
  177   2              while (1) {
  178   3                  r += dr_bishop[i];
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/27/2025 19:59:21 PAGE 4   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/28/2025 00:04:18 PAGE 4   
 
  179   3                  f += df_bishop[i];
  180   3      
@@ -254,7 +254,7 @@ line level    source
  238   2              piece = BoardState[nsq];
  239   2      
  240   2              if ((piece & TYPE_MASK) == TYPE_KNIGHT && ((piece & COLOR_WHITE) != 0) == attacker_color) return 1
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/27/2025 19:59:21 PAGE 5   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/28/2025 00:04:18 PAGE 5   
 
              -;
  241   2          }
@@ -318,7 +318,7 @@ line level    source
  299   2              nr = r + dr[i];
  300   2              nf = f + df[i];
  301   2      
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/27/2025 19:59:21 PAGE 6   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          12/28/2025 00:04:18 PAGE 6   
 
  302   2              if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
  303   2                  continue;

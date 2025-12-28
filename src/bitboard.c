@@ -26,6 +26,8 @@ U8 xdata BoardState[16] = {EMPTY, EMPTY, EMPTY, EMPTY,
 													 EMPTY, EMPTY, EMPTY, EMPTY,
 													 EMPTY, EMPTY, EMPTY, EMPTY,};
 
+U8 xdata LiftedPieceSquare = 0;
+
 
 // ===================================================================================
 

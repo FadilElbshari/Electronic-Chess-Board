@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "config.h"
+#include "uart.h"
 #include "bitboard.h"
 
 
@@ -71,5 +72,16 @@ void serial_ISR(void) interrupt 4 {
 				
 				return;
         }
+		
+			if (TI) {
+        TI = 0;
+
+        if (tx_tail != tx_head) {
+            SBUF = tx_buf[tx_tail];
+            tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
+        } else {
+            tx_busy = 0;   // Nothing left to send
+        }
+    }
 				
 }

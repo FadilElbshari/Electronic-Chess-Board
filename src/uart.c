@@ -5,6 +5,13 @@
 // ================================================================================
 // =========================UART Serial Management START===========================
 // ================================================================================
+
+volatile U8 xdata tx_buf[TX_BUF_SIZE];
+volatile U8 xdata tx_head = 0;
+volatile U8 xdata tx_tail = 0;
+volatile bit tx_busy = 0;
+
+
 void uart_init(void) {
     TMOD &= 0x0F;
 		TMOD |= 0x20;
@@ -17,10 +24,15 @@ void uart_init(void) {
 }
 
 void uart_send_char(unsigned char c) {
-    TI = 0;
-    SBUF = c;
-    
-    while (TI == 0);
+    tx_buf[tx_head] = c;
+    tx_head = (tx_head + 1) % TX_BUF_SIZE;
+
+    if (!tx_busy) {
+        tx_busy = 1;
+        TI = 0;
+        SBUF = tx_buf[tx_tail];
+        tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
+    }
 }
 
 

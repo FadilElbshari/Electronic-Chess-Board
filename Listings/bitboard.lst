@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BITBOARD                                                          12/27/2025 19:59:21 PAGE 1   
+C51 COMPILER V9.60.7.0   BITBOARD                                                          12/28/2025 00:04:18 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BITBOARD
@@ -36,24 +36,26 @@ line level    source
   26                                     EMPTY, EMPTY, EMPTY, EMPTY,
   27                                     EMPTY, EMPTY, EMPTY, EMPTY,};
   28          
-  29          
-  30          // ===================================================================================
+  29          U8 xdata LiftedPieceSquare = 0;
+  30          
   31          
-  32          bit compare_boards(Bitboard *a, Bitboard *b) {
-  33   1          U8 i;
-  34   1          for (i = 0; i < BOARD_W; i++) {
-  35   2              if (a->RANK[i] != b->RANK[i])
-  36   2                  return 0;   // mismatch
-  37   2          }
-  38   1          return 1;           // all match
-  39   1      }
-  40          
+  32          // ===================================================================================
+  33          
+  34          bit compare_boards(Bitboard *a, Bitboard *b) {
+  35   1          U8 i;
+  36   1          for (i = 0; i < BOARD_W; i++) {
+  37   2              if (a->RANK[i] != b->RANK[i])
+  38   2                  return 0;   // mismatch
+  39   2          }
+  40   1          return 1;           // all match
+  41   1      }
+  42          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =     48    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     50    ----
+   XDATA SIZE       =     51    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----       6
    IDATA SIZE       =   ----    ----

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART                                                              12/25/2025 23:43:23 PAGE 1   
+C51 COMPILER V9.60.7.0   UART                                                              12/28/2025 16:02:15 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART
@@ -15,43 +15,57 @@ line level    source
    5          // ================================================================================
    6          // =========================UART Serial Management START===========================
    7          // ================================================================================
-   8          void uart_init(void) {
-   9   1          TMOD &= 0x0F;
-  10   1          TMOD |= 0x20;
-  11   1          TR1 = 1;
-  12   1          TH1 = 0xFF; // was 0xFD for 9600
-  13   1          SCON = 0x50;  
-  14   1          PCON |= 0x80;   // SMOD = 1
-  15   1          ES = 1;
-  16   1          EA = 1;
-  17   1      }
-  18          
-  19          void uart_send_char(unsigned char c) {
-  20   1          TI = 0;
-  21   1          SBUF = c;
-  22   1          
-  23   1          while (TI == 0);
+   8          
+   9          volatile U8 xdata tx_buf[TX_BUF_SIZE];
+  10          volatile U8 xdata tx_head = 0;
+  11          volatile U8 xdata tx_tail = 0;
+  12          volatile bit tx_busy = 0;
+  13          
+  14          
+  15          void uart_init(void) {
+  16   1          TMOD &= 0x0F;
+  17   1          TMOD |= 0x20;
+  18   1          TR1 = 1;
+  19   1          TH1 = 0xFF; // was 0xFD for 9600
+  20   1          SCON = 0x50;  
+  21   1          PCON |= 0x80;   // SMOD = 1
+  22   1          ES = 1;
+  23   1          EA = 1;
   24   1      }
   25          
-  26          
-  27          void uart_send_string(const char code *s) {
-  28   1          while(*s) {
-  29   2              uart_send_char(*s++);
-  30   2          }
-  31   1      }
-  32          // ===============================================================================
-  33          // =========================UART Serial Management END============================
-  34          // ===============================================================================
+  26          void uart_send_char(unsigned char c) {
+  27   1          tx_buf[tx_head] = c;
+  28   1          tx_head = (tx_head + 1) % TX_BUF_SIZE;
+  29   1      
+  30   1          if (!tx_busy) {
+  31   2              tx_busy = 1;
+  32   2              TI = 0;
+  33   2              SBUF = tx_buf[tx_tail];
+  34   2              tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
+  35   2          }
+  36   1      }
+  37          
+  38          
+  39          void uart_send_string(const char code *s) {
+  40   1          while(*s) {
+  41   2              uart_send_char(*s++);
+  42   2          }
+  43   1      }
+  44          // ===============================================================================
+  45          // =========================UART Serial Management END============================
+  46          // ===============================================================================
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     59    ----
+   CODE SIZE        =    104    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =   ----    ----
+   XDATA SIZE       =     10    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
+C51 COMPILER V9.60.7.0   UART                                                              12/28/2025 16:02:15 PAGE 2   
+
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
+   BIT SIZE         =      1    ----
 END OF MODULE INFORMATION.
 
 

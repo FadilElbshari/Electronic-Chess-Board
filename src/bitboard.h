@@ -27,6 +27,8 @@ extern bit TURN;
 extern U8 xdata KingSquares[2];
 extern U8 xdata BoardState[16];
 
+extern U8 xdata LiftedPieceSquare;
+
 // ===================================================================================
 
 #endif

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   12/27/2025 19:59:21 PAGE 1   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   12/28/2025 00:04:18 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SHIFT_REGISTERS
@@ -62,7 +62,7 @@ line level    source
   52   1        clock_gen_parallel();
   53   1        CLK_ENABLE = 0;
   54   1        
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   12/27/2025 19:59:21 PAGE 2   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   12/28/2025 00:04:18 PAGE 2   
 
   55   1        
   56   1        for (i=0; i<4; i++) {
@@ -126,7 +126,7 @@ line level    source
  114   2              SERIAL_DATA_OUT = (r3 >> shift) & 1; clock_gen_serial();
  115   2              SERIAL_DATA_OUT = (r2 >> shift) & 1; clock_gen_serial();
  116   2              SERIAL_DATA_OUT = (r1 >> shift) & 1; clock_gen_serial();
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   12/27/2025 19:59:21 PAGE 3   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   12/28/2025 00:04:18 PAGE 3   
 
  117   2              SERIAL_DATA_OUT = (r0 >> shift) & 1; clock_gen_serial();
  118   2          }
