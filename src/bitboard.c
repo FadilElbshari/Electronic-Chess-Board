@@ -18,6 +18,7 @@ const Bitboard xdata OneBoard = {{0xFF, 0xFF, 0xFF, 0xFF}};
 
 bit MATCH = 0;
 bit TURN = WHITE;
+bit COLOR = WHITE;
 
 U8 xdata KingSquares[2] = {0, 0};
 

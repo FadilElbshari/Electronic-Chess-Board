@@ -9,7 +9,7 @@
 
 #define LIFT_FLAG '!'
 #define CONNECTION_FLAG '#'
-#define LEGAL_MOVE_FLAG '*'
+#define MOVE_FLAG '*'
 
 #define WHITE 1
 #define BLACK 0

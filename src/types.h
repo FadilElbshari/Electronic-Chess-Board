@@ -25,6 +25,7 @@ typedef enum {
 typedef enum {
 	NOT_CONNECTED,
 	RECEIVING_POSITION,
+	RECEIVING_MOVE,
 	WAITING
 } ISRState;
 

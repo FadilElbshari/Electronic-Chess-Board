@@ -76,6 +76,7 @@ int main(void) {
 					break;
 				}
 				
+				MOVE_RECEIVED = 0;
 				CurrentBoard = PolledBoard;
 				JustEnteredState = 1;
 				CurrentMainState = DETECTING;
@@ -87,11 +88,18 @@ int main(void) {
 					JustEnteredState = 0;
 					set_leds(&ZeroBoard);
 					DelayCounter = 2;
+					
+				}
+				
+				if (MOVE_RECEIVED) {
+					CurrentMainState = AWAIT_POSITION_SET;
+					JustEnteredState = 1;
+					break;
 				}
 				
 				if (LED_READY) {
 					LED_READY = 0;
-					set_leds(&LegalMoves);
+					set_leds(&DisplayBoardLEDs);
 					DelayCounter = 2;
 				}
 
@@ -152,6 +160,7 @@ int main(void) {
 									for (j=0; j<4; j++) {
 										if ((LeftMask.RANK[i] >> j) & 1) {
 											LegalMoves = get_legal_moves(i*4 + j);
+											DisplayBoardLEDs = LegalMoves;
 											LiftedPieceSquare = 0;
 											LiftedPieceSquare = (i << 4) | j;
 											LED_READY = 1;

@@ -41,7 +41,7 @@ Bitboard get_legal_moves(U8 sq) {
 
 		piece_turn = (from_piece & COLOR_WHITE) != 0;
 
-		if (piece_turn != TURN) return legal_board;
+		if ((piece_turn != TURN) || (piece_turn != COLOR)) return legal_board;
 
     /* --- Generate pseudo-legal moves --- */
     switch (from_piece & TYPE_MASK) {

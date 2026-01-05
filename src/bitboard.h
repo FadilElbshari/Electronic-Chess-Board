@@ -23,6 +23,7 @@ extern const Bitboard xdata OneBoard;
 
 extern bit MATCH;
 extern bit TURN;
+extern bit COLOR;
 
 extern U8 xdata KingSquares[2];
 extern U8 xdata BoardState[16];
