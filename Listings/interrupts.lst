@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/02/2026 22:36:13 PAGE 1   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE INTERRUPTS
@@ -32,109 +32,187 @@ line level    source
   22          volatile ISRState CurrentISRState = NOT_CONNECTED;
   23          volatile Bitboard xdata DisplayBoardLEDs = {{0x00, 0x00, 0x00, 0x00}};
   24          
-  25          /* ======================================================== */
-  26          
-  27          void serial_ISR(void) interrupt 4 {
-  28   1          if (RI) {
-  29   2              U8 c;
-  30   2              c = SBUF;
-  31   2              RI = 0;
-  32   2              
-  33   2              switch (CurrentISRState) {
-  34   3                case NOT_CONNECTED:
-  35   3                  if (c == CONNECTION_FLAG) {
-  36   4                    CONNECTED = 1;
-  37   4                    CurrentISRState = RECEIVING_POSITION;
-  38   4                  }
-  39   3                  break;
-  40   3                  
-  41   3                case RECEIVING_POSITION:
-  42   3                  if (ReceivingPositionCounter == 16) {
-  43   4                    COLOR = c;
-  44   4                    POSITION_DONE = 1;
-  45   4                  }
-  46   3                  if (!POSITION_DONE) {
-  47   4                    if ((c & TYPE_MASK) == TYPE_KING) {
-  48   5                      bit piece_turn;
-  49   5                      piece_turn = (c & COLOR_WHITE) != 0;
-  50   5                      
-  51   5                      KingSquares[piece_turn] = ReceivingPositionCounter;
-  52   5                    }
-  53   4                    BoardState[ReceivingPositionCounter++] = c;
-  54   4                  }
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/02/2026 22:36:13 PAGE 2   
+  25          volatile RX_STATE rxState = RX_WAIT_HEADER;
+  26          volatile U8 xdata rxType;
+  27          volatile U8 xdata rxLen;
+  28          volatile U8 xdata rxIndex;
+  29          volatile U8 xdata rxChecksum;
+  30          volatile U8 xdata rxBuffer[MAX_PAYLOAD];
+  31          volatile bit rxPacketReady = 0;
+  32          
+  33          
+  34          volatile U8 xdata txHeader;
+  35          volatile U8 xdata txType;
+  36          volatile U8 xdata txLen;
+  37          volatile U8 xdata txChecksum;
+  38          volatile U8 xdata txBuffer[MAX_PAYLOAD];
+  39          volatile bit txPacketReady = 0;
+  40          
+  41          /* ======================================================== */
+  42          
+  43          void serial_ISR(void) interrupt 4 {
+  44   1          if (RI) {
+  45   2              U8 c;
+  46   2              c = SBUF;
+  47   2              RI = 0;
+  48   2            
+  49   2            switch (rxState) {
+  50   3      
+  51   3              case RX_WAIT_HEADER:
+  52   3                  if (c == 0xAA) {
+  53   4                      rxChecksum = 0;
+  54   4                      rxState = RX_WAIT_TYPE;
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 2   
 
-  55   3                  if (POSITION_DONE && (ReceivingPositionCounter == 16)) {
-  56   4                    U8 i, j;
-  57   4                    
-  58   4                    DisplayBoardLEDs = ZeroBoard;
-  59   4                    
-  60   4                    for (i=0; i<4; i++){
-  61   5                      for (j=0; j<4; j++) {
-  62   6                        if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
-  63   7                          DisplayBoardLEDs.RANK[i] |= (1 << j);
-  64   7                        }
-  65   6                      }
-  66   5                    }
-  67   4                    
-  68   4                    ReceivingPositionCounter = 0;
-  69   4                    CurrentISRState = WAITING;
-  70   4                    LED_READY = 1;
-  71   4                  }
-  72   3                  break;
-  73   3                  
-  74   3                case RECEIVING_MOVE:
-  75   3                  MoveSquares[ReceivingMoveCounter++] = c;
+  55   4                  }
+  56   3                  break;
+  57   3      
+  58   3              case RX_WAIT_TYPE:
+  59   3                  rxType = c;
+  60   3                  rxChecksum ^= c;
+  61   3                  rxState = RX_WAIT_LEN;
+  62   3                  break;
+  63   3      
+  64   3              case RX_WAIT_LEN:
+  65   3                  rxLen = c;
+  66   3                  rxIndex = 0;
+  67   3                  rxChecksum ^= c;
+  68   3                  
+  69   3                  if (rxLen > 0) {
+  70   4                    rxState = RX_WAIT_DATA;
+  71   4                    break;
+  72   4                    
+  73   4                  }
+  74   3                  rxState = RX_WAIT_CHECKSUM;
+  75   3                  break;
   76   3                  
-  77   3                  if (ReceivingMoveCounter == 4) {
-  78   4                    DisplayBoardLEDs = ZeroBoard;
-  79   4                    DisplayBoardLEDs.RANK[MoveSquares[0]] |= (1 << MoveSquares[1]);
-  80   4                    DisplayBoardLEDs.RANK[MoveSquares[2]] |= (1 << MoveSquares[3]);
-  81   4                    ReceivingMoveCounter = 0;
-  82   4                    CurrentISRState = WAITING;
-  83   4                    LED_READY = 1;
-  84   4                    MOVE_RECEIVED = 1;
-  85   4                  }
-  86   3                
-  87   3                  break;
-  88   3                  
-  89   3                case WAITING:
-  90   3                  if (c == MOVE_FLAG) {
-  91   4                    ReceivingMoveCounter = 0;
-  92   4                    CurrentISRState = RECEIVING_MOVE;
-  93   4                    MOVE_RECEIVED = 0;
-  94   4                  }
-  95   3                  break;
-  96   3                  
-  97   3              }
-  98   2              
-  99   2              return;
- 100   2              }
- 101   1          
- 102   1            if (TI) {
- 103   2              TI = 0;
- 104   2      
- 105   2              if (tx_tail != tx_head) {
- 106   3                  SBUF = tx_buf[tx_tail];
- 107   3                  tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
- 108   3              } else {
- 109   3                  tx_busy = 0;   // Nothing left to send
- 110   3              }
- 111   2          }
- 112   1              
- 113   1      }
+  77   3      
+  78   3              case RX_WAIT_DATA:
+  79   3                rxBuffer[rxIndex++] = c;
+  80   3                rxChecksum ^= c;
+  81   3      
+  82   3                  if (rxIndex >= rxLen) {
+  83   4                      rxState = RX_WAIT_CHECKSUM;
+  84   4                  }
+  85   3                  break;
+  86   3      
+  87   3              case RX_WAIT_CHECKSUM:
+  88   3                  if (c == rxChecksum) {
+  89   4                      rxPacketReady = 1;   // signal main loop
+  90   4                  }
+  91   3                  rxState = RX_WAIT_HEADER; // always reset
+  92   3                  break;
+  93   3          }
+  94   2            return;
+  95   2        }     
+  96   1          
+  97   1          if (TI) {
+  98   2            TI = 0;
+  99   2      
+ 100   2            if (tx_tail != tx_head) {
+ 101   3                SBUF = tx_buf[tx_tail];
+ 102   3                tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
+ 103   3            } else {
+ 104   3                tx_busy = 0;   // Nothing left to send
+ 105   3            }
+ 106   2          }
+ 107   1              
+ 108   1      }
+ 109          
+ 110          void process_rx_packet(void) {
+ 111   1        U8 i, j;
+ 112   1        
+ 113   1        if (!rxPacketReady) return;
+ 114   1        rxPacketReady = 0;
+ 115   1      
+ 116   1        switch (rxType) {
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 3   
+
+ 117   2          case CONNECTION_PACKET:
+ 118   2            CONNECTED = 1;
+ 119   2            break;
+ 120   2          
+ 121   2          case BOARD_PACKET:
+ 122   2            for (i=0; i<rxLen-1; i++) {
+ 123   3              U8 c;
+ 124   3              c = rxBuffer[i];
+ 125   3              BoardState[i] = c;
+ 126   3              if ((c & TYPE_MASK) == TYPE_KING) {
+ 127   4                bit piece_turn;
+ 128   4                piece_turn = (c & COLOR_WHITE) != 0;
+ 129   4                KingSquares[piece_turn] = i;
+ 130   4              }
+ 131   3            }
+ 132   2            COLOR = rxBuffer[i];
+ 133   2            
+ 134   2            DisplayBoardLEDs = ZeroBoard;
+ 135   2                    
+ 136   2            for (i=0; i<4; i++){
+ 137   3              for (j=0; j<4; j++) {
+ 138   4                if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
+ 139   5                  DisplayBoardLEDs.RANK[i] |= (1 << j);
+ 140   5                }
+ 141   4              }
+ 142   3            }
+ 143   2            LED_READY = 1;
+ 144   2            
+ 145   2            break;
+ 146   2            
+ 147   2          
+ 148   2          case MOVE_PACKET: 
+ 149   2            DisplayBoardLEDs = ZeroBoard;
+ 150   2          
+ 151   2            for (i=0; i<rxLen; i++) MoveSquares[i] = rxBuffer[i];
+ 152   2        
+ 153   2            DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
+ 154   2            DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+ 155   2          
+ 156   2            MoveBoard = CurrentBoard;
+ 157   2          
+ 158   2            MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
+ 159   2            MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+ 160   2          
+ 161   2            MOVE_RECEIVED = 1;
+ 162   2            break;
+ 163   2        }
+ 164   1      }
+ 165          
+ 166          
+ 167          
+ 168          void process_tx_packet(void) {
+ 169   1        U8 i, c;
+ 170   1        if (!txPacketReady) return;
+ 171   1        txPacketReady = 0;
+ 172   1        
+ 173   1        txChecksum = 0;
+ 174   1        
+ 175   1        uart_send_byte(txHeader);
+ 176   1        uart_send_byte(txType);
+ 177   1        uart_send_byte(txLen);
+ 178   1        
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 4   
+
+ 179   1        txChecksum ^= txType;
+ 180   1        txChecksum ^= txLen;
+ 181   1        
+ 182   1        for (i=0; i<txLen; i++) {
+ 183   2          c = txBuffer[i];
+ 184   2          txChecksum ^= c;
+ 185   2          uart_send_byte(c);
+ 186   2        }
+ 187   1        
+ 188   1        uart_send_byte(txChecksum);
+ 189   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/02/2026 22:36:13 PAGE 3   
-
-   CODE SIZE        =    515    ----
+   CODE SIZE        =    810    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     10    ----
+   XDATA SIZE       =    146    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =      1       3
+   DATA SIZE        =      2       5
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =      4       1
+   BIT SIZE         =      6       1
 END OF MODULE INFORMATION.
 
 

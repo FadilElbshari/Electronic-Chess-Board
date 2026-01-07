@@ -10,16 +10,18 @@ typedef struct {
 
 typedef enum {
 	TURNED_ON,
-	AWAIT_POSITION_SET,
+	AWAIT_INITIAL_POSITION_SET,
 	DETECTING,
 	CHANGE_DETECTED,
+	AWAIT_MOVE_SET,
 	ERROR_FLASH_ON,
 	ERROR_FLASH_OFF
 } MainState;
 
 typedef enum {
 	NONE,
-	LIFT
+	LIFT,
+	CAPTURE_INTERMEDIATE
 } DetectionState;
 
 typedef enum {

@@ -17,6 +17,8 @@ extern Bitboard xdata DiffMask;
 extern Bitboard xdata LeftMask;
 extern Bitboard xdata EnteredMask;
 extern Bitboard xdata LegalMoves;
+extern Bitboard xdata IntermediateBoard;
+extern Bitboard xdata MoveBoard;
 
 extern const Bitboard xdata ZeroBoard;
 extern const Bitboard xdata OneBoard;

@@ -22,6 +22,22 @@ volatile U8 xdata MoveSquares[4] = {0};
 volatile ISRState CurrentISRState = NOT_CONNECTED;
 volatile Bitboard xdata DisplayBoardLEDs = {{0x00, 0x00, 0x00, 0x00}};
 
+volatile RX_STATE rxState = RX_WAIT_HEADER;
+volatile U8 xdata rxType;
+volatile U8 xdata rxLen;
+volatile U8 xdata rxIndex;
+volatile U8 xdata rxChecksum;
+volatile U8 xdata rxBuffer[MAX_PAYLOAD];
+volatile bit rxPacketReady = 0;
+
+
+volatile U8 xdata txHeader;
+volatile U8 xdata txType;
+volatile U8 xdata txLen;
+volatile U8 xdata txChecksum;
+volatile U8 xdata txBuffer[MAX_PAYLOAD];
+volatile bit txPacketReady = 0;
+
 /* ======================================================== */
 
 void serial_ISR(void) interrupt 4 {
@@ -29,85 +45,145 @@ void serial_ISR(void) interrupt 4 {
         U8 c;
         c = SBUF;
 				RI = 0;
-				
-				switch (CurrentISRState) {
-					case NOT_CONNECTED:
-						if (c == CONNECTION_FLAG) {
-							CONNECTED = 1;
-							CurrentISRState = RECEIVING_POSITION;
-						}
-						break;
-						
-					case RECEIVING_POSITION:
-						if (ReceivingPositionCounter == 16) {
-							COLOR = c;
-							POSITION_DONE = 1;
-						}
-						if (!POSITION_DONE) {
-							if ((c & TYPE_MASK) == TYPE_KING) {
-								bit piece_turn;
-								piece_turn = (c & COLOR_WHITE) != 0;
-								
-								KingSquares[piece_turn] = ReceivingPositionCounter;
-							}
-							BoardState[ReceivingPositionCounter++] = c;
-						}
-						if (POSITION_DONE && (ReceivingPositionCounter == 16)) {
-							U8 i, j;
-							
-							DisplayBoardLEDs = ZeroBoard;
-							
-							for (i=0; i<4; i++){
-								for (j=0; j<4; j++) {
-									if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
-										DisplayBoardLEDs.RANK[i] |= (1 << j);
-									}
-								}
-							}
-							
-							ReceivingPositionCounter = 0;
-							CurrentISRState = WAITING;
-							LED_READY = 1;
-						}
-						break;
-						
-					case RECEIVING_MOVE:
-						MoveSquares[ReceivingMoveCounter++] = c;
-						
-						if (ReceivingMoveCounter == 4) {
-							DisplayBoardLEDs = ZeroBoard;
-							DisplayBoardLEDs.RANK[MoveSquares[0]] |= (1 << MoveSquares[1]);
-							DisplayBoardLEDs.RANK[MoveSquares[2]] |= (1 << MoveSquares[3]);
-							ReceivingMoveCounter = 0;
-							CurrentISRState = WAITING;
-							LED_READY = 1;
-							MOVE_RECEIVED = 1;
-						}
-					
-						break;
-						
-					case WAITING:
-						if (c == MOVE_FLAG) {
-							ReceivingMoveCounter = 0;
-							CurrentISRState = RECEIVING_MOVE;
-							MOVE_RECEIVED = 0;
-						}
-						break;
-						
-				}
-				
-				return;
-        }
-		
-			if (TI) {
-        TI = 0;
+			
+			switch (rxState) {
 
-        if (tx_tail != tx_head) {
-            SBUF = tx_buf[tx_tail];
-            tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
-        } else {
-            tx_busy = 0;   // Nothing left to send
-        }
+        case RX_WAIT_HEADER:
+            if (c == 0xAA) {
+                rxChecksum = 0;
+                rxState = RX_WAIT_TYPE;
+            }
+            break;
+
+        case RX_WAIT_TYPE:
+            rxType = c;
+            rxChecksum ^= c;
+            rxState = RX_WAIT_LEN;
+            break;
+
+        case RX_WAIT_LEN:
+            rxLen = c;
+            rxIndex = 0;
+            rxChecksum ^= c;
+						
+						if (rxLen > 0) {
+							rxState = RX_WAIT_DATA;
+							break;
+							
+						}
+						rxState = RX_WAIT_CHECKSUM;
+						break;
+            
+
+        case RX_WAIT_DATA:
+					rxBuffer[rxIndex++] = c;
+					rxChecksum ^= c;
+
+						if (rxIndex >= rxLen) {
+								rxState = RX_WAIT_CHECKSUM;
+						}
+						break;
+
+        case RX_WAIT_CHECKSUM:
+            if (c == rxChecksum) {
+                rxPacketReady = 1;   // signal main loop
+            }
+            rxState = RX_WAIT_HEADER; // always reset
+            break;
     }
+			return;
+	}			
+		
+		if (TI) {
+			TI = 0;
+
+			if (tx_tail != tx_head) {
+					SBUF = tx_buf[tx_tail];
+					tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
+			} else {
+					tx_busy = 0;   // Nothing left to send
+			}
+		}
 				
+}
+
+void process_rx_packet(void) {
+	U8 i, j;
+	
+	if (!rxPacketReady) return;
+	rxPacketReady = 0;
+
+	switch (rxType) {
+		case CONNECTION_PACKET:
+			CONNECTED = 1;
+			break;
+		
+		case BOARD_PACKET:
+			for (i=0; i<rxLen-1; i++) {
+				U8 c;
+				c = rxBuffer[i];
+				BoardState[i] = c;
+				if ((c & TYPE_MASK) == TYPE_KING) {
+					bit piece_turn;
+					piece_turn = (c & COLOR_WHITE) != 0;
+					KingSquares[piece_turn] = i;
+				}
+			}
+			COLOR = rxBuffer[i];
+			
+			DisplayBoardLEDs = ZeroBoard;
+							
+			for (i=0; i<4; i++){
+				for (j=0; j<4; j++) {
+					if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
+						DisplayBoardLEDs.RANK[i] |= (1 << j);
+					}
+				}
+			}
+			LED_READY = 1;
+			
+			break;
+			
+		
+		case MOVE_PACKET:	
+			DisplayBoardLEDs = ZeroBoard;
+		
+			for (i=0; i<rxLen; i++) MoveSquares[i] = rxBuffer[i];
+	
+			DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
+			DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+		
+			MoveBoard = CurrentBoard;
+		
+			MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
+			MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+		
+			MOVE_RECEIVED = 1;
+			break;
+	}
+}
+
+
+
+void process_tx_packet(void) {
+	U8 i, c;
+	if (!txPacketReady) return;
+	txPacketReady = 0;
+	
+	txChecksum = 0;
+	
+	uart_send_byte(txHeader);
+	uart_send_byte(txType);
+	uart_send_byte(txLen);
+	
+	txChecksum ^= txType;
+	txChecksum ^= txLen;
+	
+	for (i=0; i<txLen; i++) {
+		c = txBuffer[i];
+		txChecksum ^= c;
+		uart_send_byte(c);
+	}
+	
+	uart_send_byte(txChecksum);
 }

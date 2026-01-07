@@ -23,22 +23,26 @@ void uart_init(void) {
 		EA = 1;
 }
 
-void uart_send_char(unsigned char c) {
-    tx_buf[tx_head] = c;
-    tx_head = (tx_head + 1) % TX_BUF_SIZE;
+void uart_send_byte(unsigned char c) {
+	U8 next;
+	
+	next = (tx_head + 1) % TX_BUF_SIZE;
+	if (next == tx_tail) return;
+	
+	tx_buf[tx_head] = c;
+	tx_head = next;
 
-    if (!tx_busy) {
-        tx_busy = 1;
-        TI = 0;
-        SBUF = tx_buf[tx_tail];
-        tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
-    }
+	if (!tx_busy) {
+			tx_busy = 1;
+			SBUF = tx_buf[tx_tail];
+			tx_tail = (tx_tail + 1) % TX_BUF_SIZE;
+	}
 }
 
 
 void uart_send_string(const char code *s) {
     while(*s) {
-        uart_send_char(*s++);
+        uart_send_byte(*s++);
     }
 }
 // ===============================================================================
