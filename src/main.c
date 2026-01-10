@@ -41,6 +41,7 @@ int main(void) {
 			EA = 0;  // Disable interrupts
 			MOVE_RECEIVED = 0;
 			EA = 1;  // Re-enable
+			tm_display_digits(MoveSquares[1] + 9 + 1, MoveSquares[0] + 1, MoveSquares[3] + 9 + 1, MoveSquares[2] + 1);
 			CurrentMainState = AWAIT_MOVE_SET;
 			JustEnteredState = 1;
 		}

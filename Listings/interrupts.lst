@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 1   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE INTERRUPTS
@@ -62,7 +62,7 @@ line level    source
   52   3                  if (c == 0xAA) {
   53   4                      rxChecksum = 0;
   54   4                      rxState = RX_WAIT_TYPE;
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 2   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 2   
 
   55   4                  }
   56   3                  break;
@@ -126,7 +126,7 @@ line level    source
  114   1        rxPacketReady = 0;
  115   1      
  116   1        switch (rxType) {
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 3   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 3   
 
  117   2          case CONNECTION_PACKET:
  118   2            CONNECTED = 1;
@@ -190,7 +190,7 @@ line level    source
  176   1        uart_send_byte(txType);
  177   1        uart_send_byte(txLen);
  178   1        
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/07/2026 00:16:44 PAGE 4   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 4   
 
  179   1        txChecksum ^= txType;
  180   1        txChecksum ^= txLen;

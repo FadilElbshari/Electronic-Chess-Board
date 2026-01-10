@@ -14,6 +14,5 @@ extern volatile bit tx_busy;
 void uart_init(void);
 void serial_ISR(void);
 void uart_send_byte(unsigned char c);
-void uart_send_string(const char code *s);
 
 #endif

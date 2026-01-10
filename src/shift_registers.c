@@ -8,11 +8,6 @@
 #include "bitboard.h"
 
 
-void figure_out_move(Bitboard *pos_board, Bitboard *new_board) {
-	U8 i;
-	for (i=0; i<4; i++) DiffMask.RANK[i] = pos_board->RANK[i] ^ new_board->RANK[i];
-}
-
 void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 	U8 i;
 	for (i=0; i<4; i++) {
