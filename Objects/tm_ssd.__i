@@ -1,1 +1,1 @@
-"src\tm_ssd.c" OPTIMIZE (8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\tm_ssd.lst) TABS (2) OBJECT(.\Objects\tm_ssd.obj)
+"src\tm_ssd.c" OPTIMIZE (9,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\tm_ssd.lst) TABS (2) OBJECT(.\Objects\tm_ssd.obj)

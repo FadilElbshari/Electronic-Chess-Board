@@ -1,9 +1,9 @@
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 1   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE INTERRUPTS
 OBJECT MODULE PLACED IN .\Objects\interrupts.obj
-COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\interrupts.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Lis
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\interrupts.c OPTIMIZE(9,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Lis
                     -tings\interrupts.lst) TABS(2) OBJECT(.\Objects\interrupts.obj)
 
 line level    source
@@ -24,28 +24,28 @@ line level    source
   14          volatile bit POSITION_DONE = 0;
   15          volatile bit MOVE_RECEIVED = 0;
   16          
-  17          volatile U8 xdata ReceivingMoveCounter = 0;
-  18          volatile U8 xdata ReceivingPositionCounter = 0;
+  17          volatile U8 ReceivingMoveCounter = 0;
+  18          volatile U8 ReceivingPositionCounter = 0;
   19          
-  20          volatile U8 xdata MoveSquares[4] = {0};
+  20          volatile U8 MoveSquares[4] = {0};
   21          
   22          volatile ISRState CurrentISRState = NOT_CONNECTED;
-  23          volatile Bitboard xdata DisplayBoardLEDs = {{0x00, 0x00, 0x00, 0x00}};
+  23          volatile Bitboard xdata DisplayBoardLEDs;
   24          
   25          volatile RX_STATE rxState = RX_WAIT_HEADER;
-  26          volatile U8 xdata rxType;
-  27          volatile U8 xdata rxLen;
-  28          volatile U8 xdata rxIndex;
-  29          volatile U8 xdata rxChecksum;
-  30          volatile U8 xdata rxBuffer[MAX_PAYLOAD];
+  26          volatile U8 rxType;
+  27          volatile U8 rxLen;
+  28          volatile U8 rxIndex;
+  29          volatile U8 rxChecksum;
+  30          volatile U8 xdata rxBuffer[MAX_RX_PAYLOAD];
   31          volatile bit rxPacketReady = 0;
   32          
   33          
-  34          volatile U8 xdata txHeader;
-  35          volatile U8 xdata txType;
-  36          volatile U8 xdata txLen;
-  37          volatile U8 xdata txChecksum;
-  38          volatile U8 xdata txBuffer[MAX_PAYLOAD];
+  34          volatile U8 txHeader;
+  35          volatile U8 txType;
+  36          volatile U8 txLen;
+  37          volatile U8 txChecksum;
+  38          volatile U8 xdata txBuffer[MAX_TX_PAYLOAD];
   39          volatile bit txPacketReady = 0;
   40          
   41          /* ======================================================== */
@@ -62,7 +62,7 @@ line level    source
   52   3                  if (c == 0xAA) {
   53   4                      rxChecksum = 0;
   54   4                      rxState = RX_WAIT_TYPE;
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 2   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 2   
 
   55   4                  }
   56   3                  break;
@@ -126,14 +126,14 @@ line level    source
  114   1        rxPacketReady = 0;
  115   1      
  116   1        switch (rxType) {
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 3   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 3   
 
  117   2          case CONNECTION_PACKET:
  118   2            CONNECTED = 1;
  119   2            break;
  120   2          
  121   2          case BOARD_PACKET:
- 122   2            for (i=0; i<rxLen-1; i++) {
+ 122   2            for (i=0; i<BOARD_W*BOARD_W; i++) {
  123   3              U8 c;
  124   3              c = rxBuffer[i];
  125   3              BoardState[i] = c;
@@ -145,72 +145,78 @@ line level    source
  131   3            }
  132   2            COLOR = rxBuffer[i];
  133   2            
- 134   2            DisplayBoardLEDs = ZeroBoard;
- 135   2                    
- 136   2            for (i=0; i<4; i++){
- 137   3              for (j=0; j<4; j++) {
- 138   4                if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
- 139   5                  DisplayBoardLEDs.RANK[i] |= (1 << j);
- 140   5                }
- 141   4              }
- 142   3            }
- 143   2            LED_READY = 1;
- 144   2            
- 145   2            break;
- 146   2            
- 147   2          
- 148   2          case MOVE_PACKET: 
- 149   2            DisplayBoardLEDs = ZeroBoard;
+ 134   2            DisplayBoardLEDs.RANK[0] = 0;
+ 135   2            DisplayBoardLEDs.RANK[1] = 0;
+ 136   2            DisplayBoardLEDs.RANK[2] = 0;
+ 137   2            DisplayBoardLEDs.RANK[3] = 0;
+ 138   2                    
+ 139   2            for (i=0; i<BOARD_W; i++){
+ 140   3              for (j=0; j<BOARD_W; j++) {
+ 141   4                if (((BoardState[(i << 2) + j] & TYPE_MASK) != TYPE_EMPTY)) {
+ 142   5                  DisplayBoardLEDs.RANK[i] |= (1 << j);
+ 143   5                }
+ 144   4              }
+ 145   3            }
+ 146   2            LED_READY = 1;
+ 147   2            
+ 148   2            break;
+ 149   2            
  150   2          
- 151   2            for (i=0; i<rxLen; i++) MoveSquares[i] = rxBuffer[i];
- 152   2        
- 153   2            DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
- 154   2            DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
- 155   2          
- 156   2            MoveBoard = CurrentBoard;
- 157   2          
- 158   2            MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
- 159   2            MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
- 160   2          
- 161   2            MOVE_RECEIVED = 1;
- 162   2            break;
- 163   2        }
- 164   1      }
- 165          
- 166          
- 167          
- 168          void process_tx_packet(void) {
- 169   1        U8 i, c;
- 170   1        if (!txPacketReady) return;
- 171   1        txPacketReady = 0;
- 172   1        
- 173   1        txChecksum = 0;
- 174   1        
- 175   1        uart_send_byte(txHeader);
- 176   1        uart_send_byte(txType);
- 177   1        uart_send_byte(txLen);
+ 151   2          case MOVE_PACKET: 
+ 152   2            DisplayBoardLEDs.RANK[0] = 0;
+ 153   2            DisplayBoardLEDs.RANK[1] = 0;
+ 154   2            DisplayBoardLEDs.RANK[2] = 0;
+ 155   2            DisplayBoardLEDs.RANK[3] = 0;
+ 156   2          
+ 157   2            for (i=0; i<4; i++) MoveSquares[i] = rxBuffer[i];
+ 158   2        
+ 159   2            DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
+ 160   2            DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+ 161   2          
+ 162   2            MoveBoard = CurrentBoard;
+ 163   2          
+ 164   2            MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
+ 165   2            MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+ 166   2          
+ 167   2            MOVE_RECEIVED = 1;
+ 168   2            break;
+ 169   2        }
+ 170   1      }
+ 171          
+ 172          
+ 173          
+ 174          void process_tx_packet(void) {
+ 175   1        U8 i, c;
+ 176   1        if (!txPacketReady) return;
+ 177   1        txPacketReady = 0;
  178   1        
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/08/2026 17:57:14 PAGE 4   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 4   
 
- 179   1        txChecksum ^= txType;
- 180   1        txChecksum ^= txLen;
- 181   1        
- 182   1        for (i=0; i<txLen; i++) {
- 183   2          c = txBuffer[i];
- 184   2          txChecksum ^= c;
- 185   2          uart_send_byte(c);
- 186   2        }
+ 179   1        txChecksum = 0;
+ 180   1        
+ 181   1        uart_send_byte(txHeader);
+ 182   1        uart_send_byte(txType);
+ 183   1        uart_send_byte(txLen);
+ 184   1        
+ 185   1        txChecksum ^= txType;
+ 186   1        txChecksum ^= txLen;
  187   1        
- 188   1        uart_send_byte(txChecksum);
- 189   1      }
+ 188   1        for (i=0; i<txLen; i++) {
+ 189   2          c = txBuffer[i];
+ 190   2          txChecksum ^= c;
+ 191   2          uart_send_byte(c);
+ 192   2        }
+ 193   1        
+ 194   1        uart_send_byte(txChecksum);
+ 195   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    810    ----
+   CODE SIZE        =    585    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =    146    ----
+   XDATA SIZE       =     72    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =      2       5
+   DATA SIZE        =     16       5
    IDATA SIZE       =   ----    ----
    BIT SIZE         =      6       1
 END OF MODULE INFORMATION.

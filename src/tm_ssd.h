@@ -2,8 +2,10 @@
 #define TM_SSD_H
 
 #include "types.h"
+#include <intrins.h>
 // SSD Communication
-void tm_delay_us(void);
+#define tm_delay_us()  _nop_()
+
 void tm_start(void);
 void tm_stop(void);
 void tm_send_byte(U8 b);

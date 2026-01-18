@@ -7,8 +7,8 @@
 // ================================================================================
 
 volatile U8 xdata tx_buf[TX_BUF_SIZE];
-volatile U8 xdata tx_head = 0;
-volatile U8 xdata tx_tail = 0;
+volatile U8 tx_head = 0;
+volatile U8 tx_tail = 0;
 volatile bit tx_busy = 0;
 
 

@@ -1,9 +1,9 @@
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/08/2026 17:56:39 PAGE 1   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/18/2026 03:42:11 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SHIFT_REGISTERS
 OBJECT MODULE PLACED IN .\Objects\shift_registers.obj
-COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\shift_registers.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\shift_registers.c OPTIMIZE(9,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(
                     -.\Listings\shift_registers.lst) TABS(2) OBJECT(.\Objects\shift_registers.obj)
 
 line level    source
@@ -28,13 +28,13 @@ line level    source
   18          
   19          
   20          bit read_and_verify_sensors(void) {
-  21   1        Bitboard xdata first, second;
+  21   1        Bitboard first, second;
   22   1        U8 attempts = 3;
   23   1        
   24   1        while (attempts--) {
-  25   2              first = read_hall_effect_sensors();
+  25   2              read_hall_effect_sensors(&first);
   26   2              delay_ms(5);
-  27   2              second = read_hall_effect_sensors();
+  27   2              read_hall_effect_sensors(&second);
   28   2      
   29   2              if (compare_boards(&first, &second)) {
   30   3                  PolledBoard = first;
@@ -45,10 +45,10 @@ line level    source
   35   1      }
   36          
   37          
-  38          Bitboard read_hall_effect_sensors(void) {
+  38          void read_hall_effect_sensors(Bitboard *board) {
   39   1        U8 i, j;
   40   1        U8 value;
-  41   1        Bitboard xdata board = {0};
+  41   1        *board = ZeroBoard;
   42   1        
   43   1        CLK_ENABLE = 1;
   44   1        SHIFT_nLOAD = 0;
@@ -62,95 +62,93 @@ line level    source
   52   2          for (j=0; j<4; j++){
   53   3            value = SERIAL_DATA_IN;
   54   3            value &= 1;
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/08/2026 17:56:39 PAGE 2   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/18/2026 03:42:11 PAGE 2   
 
-  55   3            board.RANK[j] |= ((!value) << i);
+  55   3            board->RANK[j] |= ((!value) << i);
   56   3            clock_gen_parallel();
   57   3          }
   58   2        }
-  59   1        /*
-  60   1        for (i=0; i<4; i++) {
-  61   1          for (j=0; j<4; j++){
-  62   1            value = SERIAL_DATA_IN;
-  63   1            value &= 1;
-  64   1            board.RANK[i+4] |= ((!value) << j);
-  65   1            clock_gen_parallel();
-  66   1          }
-  67   1        }
-  68   1        
-  69   1        
-  70   1        for (i=0; i<4; i++) {
-  71   1          for (j=0; j<4; j++){
-  72   1            value = SERIAL_DATA_IN;
-  73   1            value &= 1;
-  74   1            board.RANK[i] |= ((!value) << (j+4));
-  75   1            clock_gen_parallel();
-  76   1          }
-  77   1        }
-  78   1        
-  79   1        for (i=0; i<4; i++) {
-  80   1          for (j=0; j<4; j++){
-  81   1            value = SERIAL_DATA_IN;
-  82   1            value &= 1;
-  83   1            board.RANK[i+4] |= ((!value) << (j+4));
-  84   1            clock_gen_parallel();
-  85   1          }
-  86   1        }
-  87   1        */
-  88   1        
-  89   1        return board;
-  90   1      }
-  91          
-  92          void set_leds(Bitboard *to_light_up) {
-  93   1        U8 i;
-  94   1        
-  95   1        U8 r0 = to_light_up->RANK[0];
-  96   1        U8 r1 = to_light_up->RANK[1];
-  97   1        U8 r2 = to_light_up->RANK[2];
-  98   1        U8 r3 = to_light_up->RANK[3];
-  99   1        
- 100   1        MASTER_RESET = 0;
- 101   1        clock_gen_serial();
- 102   1        MASTER_RESET = 1;
+  59   1      
+  60   1        
+  61   1      //  for (i=0; i<4; i++) {
+  62   1      //    for (j=0; j<4; j++){
+  63   1      //      value = SERIAL_DATA_IN;
+  64   1      //      value &= 1;
+  65   1      //      board->RANK[i+4] |= ((!value) << j);
+  66   1      //      clock_gen_parallel();
+  67   1      //    }
+  68   1      //  }
+  69   1      //  
+  70   1      //  
+  71   1      //  for (i=0; i<4; i++) {
+  72   1      //    for (j=0; j<4; j++){
+  73   1      //      value = SERIAL_DATA_IN;
+  74   1      //      value &= 1;
+  75   1      //      board->RANK[i] |= ((!value) << (j+4));
+  76   1      //      clock_gen_parallel();
+  77   1      //    }
+  78   1      //  }
+  79   1      //  
+  80   1      //  for (i=0; i<4; i++) {
+  81   1      //    for (j=0; j<4; j++){
+  82   1      //      value = SERIAL_DATA_IN;
+  83   1      //      value &= 1;
+  84   1      //      board->RANK[i+4] |= ((!value) << (j+4));
+  85   1      //      clock_gen_parallel();
+  86   1      //    }
+  87   1      //  }
+  88   1      }
+  89          
+  90          void set_leds(const Bitboard *to_light_up) {
+  91   1        U8 i;
+  92   1        
+  93   1        U8 r0 = to_light_up->RANK[0];
+  94   1        U8 r1 = to_light_up->RANK[1];
+  95   1        U8 r2 = to_light_up->RANK[2];
+  96   1        U8 r3 = to_light_up->RANK[3];
+  97   1        
+  98   1        MASTER_RESET = 0;
+  99   1        clock_gen_serial();
+ 100   1        MASTER_RESET = 1;
+ 101   1        
+ 102   1        delay_ms(1);
  103   1        
- 104   1        delay_ms(1);
- 105   1        
- 106   1        for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
- 107   2              U8 shift = (U8)(3 - i);
- 108   2      
- 109   2              SERIAL_DATA_OUT = (r3 >> shift) & 1; clock_gen_serial();
- 110   2              SERIAL_DATA_OUT = (r2 >> shift) & 1; clock_gen_serial();
- 111   2              SERIAL_DATA_OUT = (r1 >> shift) & 1; clock_gen_serial();
- 112   2              SERIAL_DATA_OUT = (r0 >> shift) & 1; clock_gen_serial();
- 113   2          }
- 114   1        
- 115   1          LATCH_RELEASE = 0;
- 116   1          LATCH_RELEASE = 1;
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/08/2026 17:56:39 PAGE 3   
+ 104   1        for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
+ 105   2              U8 shift = (U8)(3 - i);
+ 106   2      
+ 107   2              SERIAL_DATA_OUT = (r3 >> shift) & 1; clock_gen_serial();
+ 108   2              SERIAL_DATA_OUT = (r2 >> shift) & 1; clock_gen_serial();
+ 109   2              SERIAL_DATA_OUT = (r1 >> shift) & 1; clock_gen_serial();
+ 110   2              SERIAL_DATA_OUT = (r0 >> shift) & 1; clock_gen_serial();
+ 111   2          }
+ 112   1        
+ 113   1          LATCH_RELEASE = 0;
+ 114   1          LATCH_RELEASE = 1;
+ 115   1          tm_delay_us();
+ 116   1          LATCH_RELEASE = 0;
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/18/2026 03:42:11 PAGE 3   
 
- 117   1          tm_delay_us();
- 118   1          LATCH_RELEASE = 0;
- 119   1      }
- 120          
- 121          
- 122          void clock_gen_serial() {
- 123   1        SERIAL_CLK = 1;
- 124   1        tm_delay_us();
- 125   1        SERIAL_CLK = 0;
- 126   1      }
- 127          void clock_gen_parallel() {
- 128   1        PARALLEL_CLK = 1;
- 129   1        tm_delay_us();
- 130   1        PARALLEL_CLK = 0;
- 131   1      }
+ 117   1      }
+ 118          
+ 119          
+ 120          void clock_gen_serial() {
+ 121   1        SERIAL_CLK = 1;
+ 122   1        tm_delay_us();
+ 123   1        SERIAL_CLK = 0;
+ 124   1      }
+ 125          void clock_gen_parallel() {
+ 126   1        PARALLEL_CLK = 1;
+ 127   1        tm_delay_us();
+ 128   1        PARALLEL_CLK = 0;
+ 129   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    457    ----
-   CONSTANT SIZE    =      4    ----
-   XDATA SIZE       =   ----      12
+   CODE SIZE        =    407    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =   ----      15
+   DATA SIZE        =   ----      26
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

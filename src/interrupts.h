@@ -4,7 +4,8 @@
 #include "types.h"
 
 
-#define MAX_PAYLOAD 64
+#define MAX_RX_PAYLOAD 64
+#define MAX_TX_PAYLOAD 4
 
 #define HEADER 0xAA
 #define CONNECTION_PACKET 0x01
@@ -30,26 +31,26 @@ extern volatile bit CONNECTED;
 extern volatile bit POSITION_DONE;
 extern volatile bit MOVE_RECEIVED;
 
-extern volatile U8 xdata ReceivingMoveCounter;
-extern volatile U8 xdata ReceivingPositionCounter;
-extern volatile U8 xdata MoveSquares[4];
+extern volatile U8 ReceivingMoveCounter;
+extern volatile U8 ReceivingPositionCounter;
+extern volatile U8 MoveSquares[4];
 extern volatile Bitboard xdata DisplayBoardLEDs;
 
-extern volatile ISRState CurrentISRState;
+extern volatile U8 CurrentISRState;
 
-extern volatile RX_STATE rxState;
-extern volatile U8 xdata rxType;
-extern volatile U8 xdata rxLen;
-extern volatile U8 xdata rxIndex;
-extern volatile U8 xdata rxChecksum;
-extern volatile U8 xdata rxBuffer[MAX_PAYLOAD];
+extern volatile U8 rxState;
+extern volatile U8 rxType;
+extern volatile U8 rxLen;
+extern volatile U8 rxIndex;
+extern volatile U8 rxChecksum;
+extern volatile U8 xdata rxBuffer[MAX_RX_PAYLOAD];
 extern volatile bit rxPacketReady;
 
-extern volatile U8 xdata txHeader;
-extern volatile U8 xdata txType;
-extern volatile U8 xdata txLen;
-extern volatile U8 xdata txChecksum;
-extern volatile U8 xdata txBuffer[MAX_PAYLOAD];
+extern volatile U8 txHeader;
+extern volatile U8 txType;
+extern volatile U8 txLen;
+extern volatile U8 txChecksum;
+extern volatile U8 xdata txBuffer[MAX_TX_PAYLOAD];
 extern volatile bit txPacketReady;
 // ===================================================================================
 

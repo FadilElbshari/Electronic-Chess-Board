@@ -3,6 +3,8 @@
 
 // Type Definitions
 #define BOARD_W 4
+#define SHIFT 2
+
 typedef unsigned char U8;
 typedef struct {
 	U8 RANK[BOARD_W];
@@ -14,6 +16,7 @@ typedef enum {
 	DETECTING,
 	CHANGE_DETECTED,
 	AWAIT_MOVE_SET,
+	GAME_IS_OVER,
 	ERROR_FLASH_ON,
 	ERROR_FLASH_OFF
 } MainState;

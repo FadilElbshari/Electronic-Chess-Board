@@ -10,27 +10,27 @@ bit compare_boards(Bitboard *a, Bitboard *b);
 // ============================= Board State Data ====================================
 // Reading Starts from a1 to e5
 // First bit is a1 (LSB)
-extern Bitboard xdata PolledBoard;
-extern Bitboard xdata CurrentBoard;
-extern Bitboard xdata TempBoard;
-extern Bitboard xdata DiffMask;
-extern Bitboard xdata LeftMask;
-extern Bitboard xdata EnteredMask;
-extern Bitboard xdata LegalMoves;
-extern Bitboard xdata IntermediateBoard;
+extern Bitboard PolledBoard;
+extern Bitboard CurrentBoard;
+extern Bitboard LeftMask;
+extern Bitboard EnteredMask;
+extern Bitboard LegalMoves;
+extern Bitboard IntermediateBoard;
 extern Bitboard xdata MoveBoard;
 
-extern const Bitboard xdata ZeroBoard;
-extern const Bitboard xdata OneBoard;
+extern const Bitboard code ZeroBoard;
+extern const Bitboard code OneBoard;
 
 extern bit MATCH;
 extern bit TURN;
 extern bit COLOR;
 
-extern U8 xdata KingSquares[2];
-extern U8 xdata BoardState[16];
+extern U8 KingSquares[2];
+extern U8 RookMoved[2][2];
+extern U8 KingMoved[2];
+extern U8 xdata BoardState[BOARD_W * BOARD_W];
 
-extern U8 xdata LiftedPieceSquare;
+extern U8 LiftedPieceSquare;
 
 // ===================================================================================
 

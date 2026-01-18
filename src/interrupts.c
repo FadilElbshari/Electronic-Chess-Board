@@ -14,28 +14,28 @@ volatile bit CONNECTED = 0;
 volatile bit POSITION_DONE = 0;
 volatile bit MOVE_RECEIVED = 0;
 
-volatile U8 xdata ReceivingMoveCounter = 0;
-volatile U8 xdata ReceivingPositionCounter = 0;
+volatile U8 ReceivingMoveCounter = 0;
+volatile U8 ReceivingPositionCounter = 0;
 
-volatile U8 xdata MoveSquares[4] = {0};
+volatile U8 MoveSquares[4] = {0};
 
 volatile ISRState CurrentISRState = NOT_CONNECTED;
-volatile Bitboard xdata DisplayBoardLEDs = {{0x00, 0x00, 0x00, 0x00}};
+volatile Bitboard xdata DisplayBoardLEDs;
 
 volatile RX_STATE rxState = RX_WAIT_HEADER;
-volatile U8 xdata rxType;
-volatile U8 xdata rxLen;
-volatile U8 xdata rxIndex;
-volatile U8 xdata rxChecksum;
-volatile U8 xdata rxBuffer[MAX_PAYLOAD];
+volatile U8 rxType;
+volatile U8 rxLen;
+volatile U8 rxIndex;
+volatile U8 rxChecksum;
+volatile U8 xdata rxBuffer[MAX_RX_PAYLOAD];
 volatile bit rxPacketReady = 0;
 
 
-volatile U8 xdata txHeader;
-volatile U8 xdata txType;
-volatile U8 xdata txLen;
-volatile U8 xdata txChecksum;
-volatile U8 xdata txBuffer[MAX_PAYLOAD];
+volatile U8 txHeader;
+volatile U8 txType;
+volatile U8 txLen;
+volatile U8 txChecksum;
+volatile U8 xdata txBuffer[MAX_TX_PAYLOAD];
 volatile bit txPacketReady = 0;
 
 /* ======================================================== */
@@ -119,7 +119,7 @@ void process_rx_packet(void) {
 			break;
 		
 		case BOARD_PACKET:
-			for (i=0; i<rxLen-1; i++) {
+			for (i=0; i<BOARD_W*BOARD_W; i++) {
 				U8 c;
 				c = rxBuffer[i];
 				BoardState[i] = c;
@@ -131,11 +131,14 @@ void process_rx_packet(void) {
 			}
 			COLOR = rxBuffer[i];
 			
-			DisplayBoardLEDs = ZeroBoard;
+			DisplayBoardLEDs.RANK[0] = 0;
+			DisplayBoardLEDs.RANK[1] = 0;
+			DisplayBoardLEDs.RANK[2] = 0;
+			DisplayBoardLEDs.RANK[3] = 0;
 							
-			for (i=0; i<4; i++){
-				for (j=0; j<4; j++) {
-					if (((BoardState[i*4 + j] & TYPE_MASK) != TYPE_EMPTY)) {
+			for (i=0; i<BOARD_W; i++){
+				for (j=0; j<BOARD_W; j++) {
+					if (((BoardState[(i << 2) + j] & TYPE_MASK) != TYPE_EMPTY)) {
 						DisplayBoardLEDs.RANK[i] |= (1 << j);
 					}
 				}
@@ -146,9 +149,12 @@ void process_rx_packet(void) {
 			
 		
 		case MOVE_PACKET:	
-			DisplayBoardLEDs = ZeroBoard;
+			DisplayBoardLEDs.RANK[0] = 0;
+			DisplayBoardLEDs.RANK[1] = 0;
+			DisplayBoardLEDs.RANK[2] = 0;
+			DisplayBoardLEDs.RANK[3] = 0;
 		
-			for (i=0; i<rxLen; i++) MoveSquares[i] = rxBuffer[i];
+			for (i=0; i<4; i++) MoveSquares[i] = rxBuffer[i];
 	
 			DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
 			DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];

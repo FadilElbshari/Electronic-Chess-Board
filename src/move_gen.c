@@ -4,24 +4,32 @@
 #include "bitboard.h"
 
 // King directions
-const signed char dr[8] = {-1,-1,-1,0,0,1,1,1};
-const signed char df[8] = {-1,0,1,-1,1,-1,0,1};
+static const signed char code dr[8] = {-1,-1,-1,0,0,1,1,1};
+static const signed char code df[8] = {-1,0,1,-1,1,-1,0,1};
 
 // Rook directions
-const signed char dr_rook[4] = { -1,  1,  0,  0 };
-const signed char df_rook[4] = {  0,  0, -1,  1 };
+static const signed char code dr_rook[4] = { -1,  1,  0,  0 };
+static const signed char code df_rook[4] = {  0,  0, -1,  1 };
 
 // Bishop directions
-const signed char dr_bishop[4] = { -1, -1,  1,  1 };
-const signed char df_bishop[4] = { -1,  1, -1,  1 };
+static const signed char code dr_bishop[4] = { -1, -1,  1,  1 };
+static const signed char code df_bishop[4] = { -1,  1, -1,  1 };
 
 // Knight directions
-const signed char dr_knight[8] = { -2, -2, -1, -1,  1,  1,  2,  2 };
-const signed char df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
+static const signed char code dr_knight[8] = { -2, -2, -1, -1,  1,  1,  2,  2 };
+static const signed char code df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
 
+// Pawn directions
+static const U8 code pawn_forward[2][4] = {
+    {0x02, 0x04, 0x08, 0x10},  // White
+    {0x10, 0x08, 0x04, 0x02}   // Black
+};
+
+
+U8 GAME_OVER_INFO = 0;
 
 		
-Bitboard get_legal_moves(U8 sq) {
+void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
 
     U8 r, f, to_sq;
 		bit piece_turn;
@@ -29,19 +37,23 @@ Bitboard get_legal_moves(U8 sq) {
     U8 old_king_sq;
 
     Bitboard pseudo_board;
-    Bitboard legal_board;
 
-    pseudo_board = ZeroBoard;
-    legal_board  = ZeroBoard;
+		pseudo_board.RANK[0] = 0;
+		pseudo_board.RANK[1] = 0;
+		pseudo_board.RANK[2] = 0;
+		pseudo_board.RANK[3] = 0;
+
+    *legal_board  = ZeroBoard;
 
     from_piece = BoardState[sq];
     old_king_sq = KingSquares[TURN];
 	
-		if ((from_piece & TYPE_MASK) == TYPE_EMPTY) return legal_board;
+		if ((from_piece & TYPE_MASK) == TYPE_EMPTY) return;
 
 		piece_turn = (from_piece & COLOR_WHITE) != 0;
 
-		if ((piece_turn != TURN) || (piece_turn != COLOR)) return legal_board;
+		if (piece_turn != TURN) return;
+		if (!pass) if (piece_turn != COLOR) return;
 
     /* --- Generate pseudo-legal moves --- */
     switch (from_piece & TYPE_MASK) {
@@ -72,7 +84,7 @@ Bitboard get_legal_moves(U8 sq) {
             if (!(pseudo_board.RANK[r] & (1 << f)))
                 continue;
 
-            to_sq = (r << 2) | f;
+            to_sq = (r << SHIFT) | f;
 
             /* make temporary move */
             captured_piece = BoardState[to_sq];
@@ -84,7 +96,7 @@ Bitboard get_legal_moves(U8 sq) {
 
             /* check king safety */
             if (!is_square_attacked(KingSquares[TURN], !TURN)) {
-                legal_board.RANK[r] |= (1 << f);
+                legal_board->RANK[r] |= (1 << f);
             }
 
             /* undo move */
@@ -94,7 +106,6 @@ Bitboard get_legal_moves(U8 sq) {
         }
     }
 
-    return legal_board;
 }
 
 
@@ -117,7 +128,7 @@ void get_king_moves(U8 sq, Bitboard *board) {
         if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
             continue;
 
-        new_sq = r * BOARD_W + f;
+        new_sq = (r << SHIFT) + f;
         target = BoardState[new_sq];
 
         if ((target & TYPE_MASK) == TYPE_EMPTY || (target & COLOR_WHITE) != color) {
@@ -147,7 +158,7 @@ void get_rook_moves(U8 sq, Bitboard *board) {
             if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
                 break;
 
-            target = BoardState[r * BOARD_W + f];
+            target = BoardState[(r << SHIFT) + f];
 
             if ((target & TYPE_MASK) == TYPE_EMPTY) {
                 board->RANK[r] |= (1 << f);
@@ -181,7 +192,7 @@ void get_bishop_moves(U8 sq, Bitboard *board) {
             if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
                 break;
 
-            target = BoardState[r * BOARD_W + f];
+            target = BoardState[(r << SHIFT) + f];
 
             if ((target & TYPE_MASK) == TYPE_EMPTY) {
                 board->RANK[r] |= (1 << f);
@@ -211,7 +222,7 @@ void get_knight_moves(U8 sq, Bitboard *board) {
         if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
             continue;
 
-        target = BoardState[r * BOARD_W + f];
+        target = BoardState[(r << SHIFT) + f];
 
         if ((target & TYPE_MASK) == TYPE_EMPTY || (target & COLOR_WHITE) != color) {
             board->RANK[r] |= (1 << f);
@@ -234,7 +245,7 @@ bit is_square_attacked(U8 sq, bit attacker_color)
         if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
             continue;
 
-        nsq = (nr << 2) | nf;
+        nsq = (nr << SHIFT) | nf;
         piece = BoardState[nsq];
 
         if ((piece & TYPE_MASK) == TYPE_KNIGHT && ((piece & COLOR_WHITE) != 0) == attacker_color) return 1;
@@ -252,7 +263,7 @@ bit is_square_attacked(U8 sq, bit attacker_color)
             if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
                 break;
 
-            nsq = (nr << 2) | nf;
+            nsq = (nr << SHIFT) | nf;
             piece = BoardState[nsq];
 
             if ((piece & TYPE_MASK) == TYPE_EMPTY)
@@ -279,7 +290,7 @@ bit is_square_attacked(U8 sq, bit attacker_color)
             if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
                 break;
 
-            nsq = (nr << 2) | nf;
+            nsq = (nr << SHIFT) | nf;
             piece = BoardState[nsq];
 
             if ((piece & TYPE_MASK) == TYPE_EMPTY)
@@ -302,13 +313,39 @@ bit is_square_attacked(U8 sq, bit attacker_color)
         if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
             continue;
 
-        nsq = (nr << 2) | nf;
+        nsq = (nr << SHIFT) | nf;
         piece = BoardState[nsq];
 
         if ((piece & TYPE_MASK) == TYPE_KING && ((piece & COLOR_WHITE) != 0) == attacker_color) return 1;
     }
 
     return 0;
+}
+
+bit is_game_over(void)
+{
+    U8 sq;
+    Bitboard moves;
+
+    // 1) King first
+    get_legal_moves(KingSquares[TURN], &moves, 1);
+    if (moves.RANK[0] | moves.RANK[1] |
+        moves.RANK[2] | moves.RANK[3])
+        return 0;
+
+    // 2) All other pieces
+    for (sq = 0; sq < BOARD_W*BOARD_W; sq++) {
+        if (BoardState[sq] == EMPTY) continue;
+        if (((BoardState[sq] & COLOR_WHITE) != 0) != TURN) continue;
+        if ((BoardState[sq] & TYPE_MASK) == TYPE_KING) continue;
+
+        get_legal_moves(sq, &moves, 1);
+        if (moves.RANK[0] | moves.RANK[1] |
+            moves.RANK[2] | moves.RANK[3])
+            return 0;
+    }
+
+    return 1;
 }
 
 

@@ -1,24 +1,21 @@
 #include "tm_ssd.h"
 
 #include <REG52.H>
-#include <intrins.h>
 #include "types.h"
 #include "hardware.h"
+
+
 
 // ===============================================================================
 // =========================Seven Segment Display START===========================
 // ===============================================================================
 
 // ============================ Useful Constant Values ===============================
-const U8 xdata seg_table[18] = {
+const U8 code seg_table[18] = {
         0x3F,0x06,0x5B,0x4F,0x66, // 0-4
         0x6D,0x7D,0x07,0x7F,0x6F, // 5-9
 			0x77,0x7C,0x39,0x5E,0x79,0x71,0x3D,0x76, // A-E
 };
-
-void tm_delay_us(void) {
-    _nop_(); // Instead of a loop
-}
 
 
 void tm_start(void) {

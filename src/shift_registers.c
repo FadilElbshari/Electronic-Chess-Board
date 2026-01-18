@@ -18,13 +18,13 @@ void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 
 
 bit read_and_verify_sensors(void) {
-	Bitboard xdata first, second;
+	Bitboard first, second;
   U8 attempts = 3;
 	
 	while (attempts--) {
-        first = read_hall_effect_sensors();
+        read_hall_effect_sensors(&first);
         delay_ms(5);
-        second = read_hall_effect_sensors();
+        read_hall_effect_sensors(&second);
 
         if (compare_boards(&first, &second)) {
             PolledBoard = first;
@@ -35,10 +35,10 @@ bit read_and_verify_sensors(void) {
 }
 
 
-Bitboard read_hall_effect_sensors(void) {
+void read_hall_effect_sensors(Bitboard *board) {
 	U8 i, j;
 	U8 value;
-	Bitboard xdata board = {0};
+	*board = ZeroBoard;
 	
 	CLK_ENABLE = 1;
 	SHIFT_nLOAD = 0;
@@ -52,44 +52,42 @@ Bitboard read_hall_effect_sensors(void) {
 		for (j=0; j<4; j++){
 			value = SERIAL_DATA_IN;
 			value &= 1;
-			board.RANK[j] |= ((!value) << i);
+			board->RANK[j] |= ((!value) << i);
 			clock_gen_parallel();
 		}
 	}
-	/*
-	for (i=0; i<4; i++) {
-		for (j=0; j<4; j++){
-			value = SERIAL_DATA_IN;
-			value &= 1;
-			board.RANK[i+4] |= ((!value) << j);
-			clock_gen_parallel();
-		}
-	}
+
 	
-	
-	for (i=0; i<4; i++) {
-		for (j=0; j<4; j++){
-			value = SERIAL_DATA_IN;
-			value &= 1;
-			board.RANK[i] |= ((!value) << (j+4));
-			clock_gen_parallel();
-		}
-	}
-	
-	for (i=0; i<4; i++) {
-		for (j=0; j<4; j++){
-			value = SERIAL_DATA_IN;
-			value &= 1;
-			board.RANK[i+4] |= ((!value) << (j+4));
-			clock_gen_parallel();
-		}
-	}
-	*/
-	
-	return board;
+//	for (i=0; i<4; i++) {
+//		for (j=0; j<4; j++){
+//			value = SERIAL_DATA_IN;
+//			value &= 1;
+//			board->RANK[i+4] |= ((!value) << j);
+//			clock_gen_parallel();
+//		}
+//	}
+//	
+//	
+//	for (i=0; i<4; i++) {
+//		for (j=0; j<4; j++){
+//			value = SERIAL_DATA_IN;
+//			value &= 1;
+//			board->RANK[i] |= ((!value) << (j+4));
+//			clock_gen_parallel();
+//		}
+//	}
+//	
+//	for (i=0; i<4; i++) {
+//		for (j=0; j<4; j++){
+//			value = SERIAL_DATA_IN;
+//			value &= 1;
+//			board->RANK[i+4] |= ((!value) << (j+4));
+//			clock_gen_parallel();
+//		}
+//	}
 }
 
-void set_leds(Bitboard *to_light_up) {
+void set_leds(const Bitboard *to_light_up) {
 	U8 i;
 	
 	U8 r0 = to_light_up->RANK[0];

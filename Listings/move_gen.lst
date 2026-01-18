@@ -1,9 +1,9 @@
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/07/2026 00:14:50 PAGE 1   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MOVE_GEN
 OBJECT MODULE PLACED IN .\Objects\move_gen.obj
-COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\move_gen.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listi
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE src\move_gen.c OPTIMIZE(9,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listi
                     -ngs\move_gen.lst) TABS(2) OBJECT(.\Objects\move_gen.obj)
 
 line level    source
@@ -14,335 +14,372 @@ line level    source
    4          #include "bitboard.h"
    5          
    6          // King directions
-   7          const signed char dr[8] = {-1,-1,-1,0,0,1,1,1};
-   8          const signed char df[8] = {-1,0,1,-1,1,-1,0,1};
+   7          static const signed char code dr[8] = {-1,-1,-1,0,0,1,1,1};
+   8          static const signed char code df[8] = {-1,0,1,-1,1,-1,0,1};
    9          
   10          // Rook directions
-  11          const signed char dr_rook[4] = { -1,  1,  0,  0 };
-  12          const signed char df_rook[4] = {  0,  0, -1,  1 };
+  11          static const signed char code dr_rook[4] = { -1,  1,  0,  0 };
+  12          static const signed char code df_rook[4] = {  0,  0, -1,  1 };
   13          
   14          // Bishop directions
-  15          const signed char dr_bishop[4] = { -1, -1,  1,  1 };
-  16          const signed char df_bishop[4] = { -1,  1, -1,  1 };
+  15          static const signed char code dr_bishop[4] = { -1, -1,  1,  1 };
+  16          static const signed char code df_bishop[4] = { -1,  1, -1,  1 };
   17          
   18          // Knight directions
-  19          const signed char dr_knight[8] = { -2, -2, -1, -1,  1,  1,  2,  2 };
-  20          const signed char df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
+  19          static const signed char code dr_knight[8] = { -2, -2, -1, -1,  1,  1,  2,  2 };
+  20          static const signed char code df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
   21          
-  22          
-  23              
-  24          Bitboard get_legal_moves(U8 sq) {
-  25   1      
-  26   1          U8 r, f, to_sq;
-  27   1          bit piece_turn;
-  28   1          U8 from_piece, captured_piece;
-  29   1          U8 old_king_sq;
-  30   1      
-  31   1          Bitboard pseudo_board;
-  32   1          Bitboard legal_board;
+  22          // Pawn directions
+  23          static const U8 code pawn_forward[2][4] = {
+  24              {0x02, 0x04, 0x08, 0x10},  // White
+  25              {0x10, 0x08, 0x04, 0x02}   // Black
+  26          };
+  27          
+  28          
+  29          U8 GAME_OVER_INFO = 0;
+  30          
+  31              
+  32          void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
   33   1      
-  34   1          pseudo_board = ZeroBoard;
-  35   1          legal_board  = ZeroBoard;
-  36   1      
-  37   1          from_piece = BoardState[sq];
-  38   1          old_king_sq = KingSquares[TURN];
-  39   1        
-  40   1          if ((from_piece & TYPE_MASK) == TYPE_EMPTY) return legal_board;
-  41   1      
-  42   1          piece_turn = (from_piece & COLOR_WHITE) != 0;
-  43   1      
-  44   1          if ((piece_turn != TURN) || (piece_turn != COLOR)) return legal_board;
+  34   1          U8 r, f, to_sq;
+  35   1          bit piece_turn;
+  36   1          U8 from_piece, captured_piece;
+  37   1          U8 old_king_sq;
+  38   1      
+  39   1          Bitboard pseudo_board;
+  40   1      
+  41   1          pseudo_board.RANK[0] = 0;
+  42   1          pseudo_board.RANK[1] = 0;
+  43   1          pseudo_board.RANK[2] = 0;
+  44   1          pseudo_board.RANK[3] = 0;
   45   1      
-  46   1          /* --- Generate pseudo-legal moves --- */
-  47   1          switch (from_piece & TYPE_MASK) {
-  48   2              case TYPE_KNIGHT:
-  49   2                  get_knight_moves(sq, &pseudo_board);
-  50   2                  break;
-  51   2              case TYPE_BISHOP:
-  52   2                  get_bishop_moves(sq, &pseudo_board);
-  53   2                  break;
-  54   2              case TYPE_ROOK:
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/07/2026 00:14:50 PAGE 2   
+  46   1          *legal_board  = ZeroBoard;
+  47   1      
+  48   1          from_piece = BoardState[sq];
+  49   1          old_king_sq = KingSquares[TURN];
+  50   1        
+  51   1          if ((from_piece & TYPE_MASK) == TYPE_EMPTY) return;
+  52   1      
+  53   1          piece_turn = (from_piece & COLOR_WHITE) != 0;
+  54   1      
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 2   
 
-  55   2                  get_rook_moves(sq, &pseudo_board);
-  56   2                  break;
-  57   2              case TYPE_QUEEN:
-  58   2                  get_bishop_moves(sq, &pseudo_board);
-  59   2                  get_rook_moves(sq, &pseudo_board);
-  60   2                  break;
-  61   2              case TYPE_KING:
-  62   2                  get_king_moves(sq, &pseudo_board);
-  63   2                  break;
-  64   2              default:
+  55   1          if (piece_turn != TURN) return;
+  56   1          if (!pass) if (piece_turn != COLOR) return;
+  57   1      
+  58   1          /* --- Generate pseudo-legal moves --- */
+  59   1          switch (from_piece & TYPE_MASK) {
+  60   2              case TYPE_KNIGHT:
+  61   2                  get_knight_moves(sq, &pseudo_board);
+  62   2                  break;
+  63   2              case TYPE_BISHOP:
+  64   2                  get_bishop_moves(sq, &pseudo_board);
   65   2                  break;
-  66   2          }
-  67   1      
-  68   1          /* --- Filter to legal moves --- */
-  69   1          for (r = 0; r < BOARD_W; r++) {
-  70   2              for (f = 0; f < BOARD_W; f++) {
-  71   3      
-  72   3                  if (!(pseudo_board.RANK[r] & (1 << f)))
-  73   3                      continue;
-  74   3      
-  75   3                  to_sq = (r << 2) | f;
-  76   3      
-  77   3                  /* make temporary move */
-  78   3                  captured_piece = BoardState[to_sq];
-  79   3                  BoardState[to_sq] = from_piece;
-  80   3                  BoardState[sq] = TYPE_EMPTY;
-  81   3      
-  82   3                  if ((from_piece & TYPE_MASK) == TYPE_KING)
-  83   3                      KingSquares[TURN] = to_sq;
-  84   3      
-  85   3                  /* check king safety */
-  86   3                  if (!is_square_attacked(KingSquares[TURN], !TURN)) {
-  87   4                      legal_board.RANK[r] |= (1 << f);
-  88   4                  }
-  89   3      
-  90   3                  /* undo move */
-  91   3                  BoardState[sq] = from_piece;
-  92   3                  BoardState[to_sq] = captured_piece;
-  93   3                  KingSquares[TURN] = old_king_sq;
-  94   3              }
-  95   2          }
-  96   1      
-  97   1          return legal_board;
-  98   1      }
-  99          
- 100          
- 101          void get_king_moves(U8 sq, Bitboard *board) {
- 102   1        U8 i, piece, color, rank, file, new_sq, target;
- 103   1        signed char r, f;
- 104   1        
- 105   1          piece = BoardState[sq];
- 106   1          color = piece & COLOR_WHITE;
- 107   1          rank = sq >> 2;
- 108   1          file = sq & 3;
- 109   1      
- 110   1          // King direction offsets
- 111   1      
- 112   1      
- 113   1          for (i=0; i<8; i++) {
- 114   2              r = rank + dr[i];
- 115   2              f = file + df[i];
- 116   2      
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/07/2026 00:14:50 PAGE 3   
+  66   2              case TYPE_ROOK:
+  67   2                  get_rook_moves(sq, &pseudo_board);
+  68   2                  break;
+  69   2              case TYPE_QUEEN:
+  70   2                  get_bishop_moves(sq, &pseudo_board);
+  71   2                  get_rook_moves(sq, &pseudo_board);
+  72   2                  break;
+  73   2              case TYPE_KING:
+  74   2                  get_king_moves(sq, &pseudo_board);
+  75   2                  break;
+  76   2              default:
+  77   2                  break;
+  78   2          }
+  79   1      
+  80   1          /* --- Filter to legal moves --- */
+  81   1          for (r = 0; r < BOARD_W; r++) {
+  82   2              for (f = 0; f < BOARD_W; f++) {
+  83   3      
+  84   3                  if (!(pseudo_board.RANK[r] & (1 << f)))
+  85   3                      continue;
+  86   3      
+  87   3                  to_sq = (r << SHIFT) | f;
+  88   3      
+  89   3                  /* make temporary move */
+  90   3                  captured_piece = BoardState[to_sq];
+  91   3                  BoardState[to_sq] = from_piece;
+  92   3                  BoardState[sq] = TYPE_EMPTY;
+  93   3      
+  94   3                  if ((from_piece & TYPE_MASK) == TYPE_KING)
+  95   3                      KingSquares[TURN] = to_sq;
+  96   3      
+  97   3                  /* check king safety */
+  98   3                  if (!is_square_attacked(KingSquares[TURN], !TURN)) {
+  99   4                      legal_board->RANK[r] |= (1 << f);
+ 100   4                  }
+ 101   3      
+ 102   3                  /* undo move */
+ 103   3                  BoardState[sq] = from_piece;
+ 104   3                  BoardState[to_sq] = captured_piece;
+ 105   3                  KingSquares[TURN] = old_king_sq;
+ 106   3              }
+ 107   2          }
+ 108   1      
+ 109   1      }
+ 110          
+ 111          
+ 112          void get_king_moves(U8 sq, Bitboard *board) {
+ 113   1        U8 i, piece, color, rank, file, new_sq, target;
+ 114   1        signed char r, f;
+ 115   1        
+ 116   1          piece = BoardState[sq];
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 3   
 
- 117   2              if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
- 118   2                  continue;
- 119   2      
- 120   2              new_sq = r * BOARD_W + f;
- 121   2              target = BoardState[new_sq];
- 122   2      
- 123   2              if ((target & TYPE_MASK) == TYPE_EMPTY || (target & COLOR_WHITE) != color) {
- 124   3                  board->RANK[r] |= (1 << f);
- 125   3              }
- 126   2          }
- 127   1      }
- 128          
- 129          void get_rook_moves(U8 sq, Bitboard *board) {
- 130   1          U8 i, piece, color, target;
- 131   1          signed char r, f;
- 132   1          U8 rank, file;
- 133   1      
- 134   1          piece = BoardState[sq];
- 135   1          color = piece & COLOR_WHITE;
- 136   1          rank = sq >> 2;
- 137   1          file = sq & 3;
- 138   1      
- 139   1          for (i = 0; i < 4; i++) {
- 140   2              r = rank;
- 141   2              f = file;
- 142   2      
- 143   2              while (1) {
- 144   3                  r += dr_rook[i];
- 145   3                  f += df_rook[i];
- 146   3      
- 147   3                  if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
- 148   3                      break;
- 149   3      
- 150   3                  target = BoardState[r * BOARD_W + f];
- 151   3      
- 152   3                  if ((target & TYPE_MASK) == TYPE_EMPTY) {
- 153   4                      board->RANK[r] |= (1 << f);
- 154   4                  } else {
- 155   4                      if ((target & COLOR_WHITE) != color)
- 156   4                          board->RANK[r] |= (1 << f);
- 157   4                      break;   // blocked
- 158   4                  }
- 159   3              }
- 160   2          }
- 161   1      }
- 162          
- 163          void get_bishop_moves(U8 sq, Bitboard *board) {
- 164   1          U8 i, piece, color, target;
- 165   1          signed char r, f;
- 166   1          U8 rank, file;
- 167   1      
- 168   1          piece = BoardState[sq];
- 169   1          color = piece & COLOR_WHITE;
- 170   1          rank = sq >> 2;
- 171   1          file = sq & 3;
- 172   1      
- 173   1          for (i = 0; i < 4; i++) {
- 174   2              r = rank;
- 175   2              f = file;
- 176   2      
- 177   2              while (1) {
- 178   3                  r += dr_bishop[i];
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/07/2026 00:14:50 PAGE 4   
+ 117   1          color = piece & COLOR_WHITE;
+ 118   1          rank = sq >> 2;
+ 119   1          file = sq & 3;
+ 120   1      
+ 121   1          // King direction offsets
+ 122   1      
+ 123   1      
+ 124   1          for (i=0; i<8; i++) {
+ 125   2              r = rank + dr[i];
+ 126   2              f = file + df[i];
+ 127   2      
+ 128   2              if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
+ 129   2                  continue;
+ 130   2      
+ 131   2              new_sq = (r << SHIFT) + f;
+ 132   2              target = BoardState[new_sq];
+ 133   2      
+ 134   2              if ((target & TYPE_MASK) == TYPE_EMPTY || (target & COLOR_WHITE) != color) {
+ 135   3                  board->RANK[r] |= (1 << f);
+ 136   3              }
+ 137   2          }
+ 138   1      }
+ 139          
+ 140          void get_rook_moves(U8 sq, Bitboard *board) {
+ 141   1          U8 i, piece, color, target;
+ 142   1          signed char r, f;
+ 143   1          U8 rank, file;
+ 144   1      
+ 145   1          piece = BoardState[sq];
+ 146   1          color = piece & COLOR_WHITE;
+ 147   1          rank = sq >> 2;
+ 148   1          file = sq & 3;
+ 149   1      
+ 150   1          for (i = 0; i < 4; i++) {
+ 151   2              r = rank;
+ 152   2              f = file;
+ 153   2      
+ 154   2              while (1) {
+ 155   3                  r += dr_rook[i];
+ 156   3                  f += df_rook[i];
+ 157   3      
+ 158   3                  if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
+ 159   3                      break;
+ 160   3      
+ 161   3                  target = BoardState[(r << SHIFT) + f];
+ 162   3      
+ 163   3                  if ((target & TYPE_MASK) == TYPE_EMPTY) {
+ 164   4                      board->RANK[r] |= (1 << f);
+ 165   4                  } else {
+ 166   4                      if ((target & COLOR_WHITE) != color)
+ 167   4                          board->RANK[r] |= (1 << f);
+ 168   4                      break;   // blocked
+ 169   4                  }
+ 170   3              }
+ 171   2          }
+ 172   1      }
+ 173          
+ 174          void get_bishop_moves(U8 sq, Bitboard *board) {
+ 175   1          U8 i, piece, color, target;
+ 176   1          signed char r, f;
+ 177   1          U8 rank, file;
+ 178   1      
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 4   
 
- 179   3                  f += df_bishop[i];
- 180   3      
- 181   3                  if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
- 182   3                      break;
- 183   3      
- 184   3                  target = BoardState[r * BOARD_W + f];
- 185   3      
- 186   3                  if ((target & TYPE_MASK) == TYPE_EMPTY) {
- 187   4                      board->RANK[r] |= (1 << f);
- 188   4                  } else {
- 189   4                      if ((target & COLOR_WHITE) != color)
- 190   4                          board->RANK[r] |= (1 << f);
- 191   4                      break;   // blocked
- 192   4                  }
- 193   3              }
- 194   2          }
- 195   1      }
- 196          
- 197          void get_knight_moves(U8 sq, Bitboard *board) {
- 198   1          U8 i, piece, color, target;
- 199   1          signed char r, f;
- 200   1          U8 rank, file;
- 201   1      
- 202   1          piece = BoardState[sq];
- 203   1          color = piece & COLOR_WHITE;
- 204   1          rank = sq >> 2;
- 205   1          file = sq & 3;
- 206   1      
- 207   1          for (i = 0; i < 8; i++) {
- 208   2              r = rank + dr_knight[i];
- 209   2              f = file + df_knight[i];
- 210   2      
- 211   2              if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
- 212   2                  continue;
- 213   2      
- 214   2              target = BoardState[r * BOARD_W + f];
- 215   2      
- 216   2              if ((target & TYPE_MASK) == TYPE_EMPTY || (target & COLOR_WHITE) != color) {
- 217   3                  board->RANK[r] |= (1 << f);
- 218   3              }
- 219   2          }
- 220   1      }
- 221          
- 222          bit is_square_attacked(U8 sq, bit attacker_color)
- 223          {
- 224   1          U8 r = sq >> 2;
- 225   1          U8 f = sq & 3;
- 226   1          signed char nr, nf;
- 227   1          U8 i, nsq, piece, type;
- 228   1      
- 229   1          /* ---------- Knight attacks ---------- */
- 230   1          for (i = 0; i < 8; i++) {
- 231   2              nr = r + dr_knight[i];
- 232   2              nf = f + df_knight[i];
- 233   2      
- 234   2              if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
- 235   2                  continue;
- 236   2      
- 237   2              nsq = (nr << 2) | nf;
- 238   2              piece = BoardState[nsq];
- 239   2      
- 240   2              if ((piece & TYPE_MASK) == TYPE_KNIGHT && ((piece & COLOR_WHITE) != 0) == attacker_color) return 1
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/07/2026 00:14:50 PAGE 5   
+ 179   1          piece = BoardState[sq];
+ 180   1          color = piece & COLOR_WHITE;
+ 181   1          rank = sq >> 2;
+ 182   1          file = sq & 3;
+ 183   1      
+ 184   1          for (i = 0; i < 4; i++) {
+ 185   2              r = rank;
+ 186   2              f = file;
+ 187   2      
+ 188   2              while (1) {
+ 189   3                  r += dr_bishop[i];
+ 190   3                  f += df_bishop[i];
+ 191   3      
+ 192   3                  if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
+ 193   3                      break;
+ 194   3      
+ 195   3                  target = BoardState[(r << SHIFT) + f];
+ 196   3      
+ 197   3                  if ((target & TYPE_MASK) == TYPE_EMPTY) {
+ 198   4                      board->RANK[r] |= (1 << f);
+ 199   4                  } else {
+ 200   4                      if ((target & COLOR_WHITE) != color)
+ 201   4                          board->RANK[r] |= (1 << f);
+ 202   4                      break;   // blocked
+ 203   4                  }
+ 204   3              }
+ 205   2          }
+ 206   1      }
+ 207          
+ 208          void get_knight_moves(U8 sq, Bitboard *board) {
+ 209   1          U8 i, piece, color, target;
+ 210   1          signed char r, f;
+ 211   1          U8 rank, file;
+ 212   1      
+ 213   1          piece = BoardState[sq];
+ 214   1          color = piece & COLOR_WHITE;
+ 215   1          rank = sq >> 2;
+ 216   1          file = sq & 3;
+ 217   1      
+ 218   1          for (i = 0; i < 8; i++) {
+ 219   2              r = rank + dr_knight[i];
+ 220   2              f = file + df_knight[i];
+ 221   2      
+ 222   2              if (r < 0 || r >= BOARD_W || f < 0 || f >= BOARD_W)
+ 223   2                  continue;
+ 224   2      
+ 225   2              target = BoardState[(r << SHIFT) + f];
+ 226   2      
+ 227   2              if ((target & TYPE_MASK) == TYPE_EMPTY || (target & COLOR_WHITE) != color) {
+ 228   3                  board->RANK[r] |= (1 << f);
+ 229   3              }
+ 230   2          }
+ 231   1      }
+ 232          
+ 233          bit is_square_attacked(U8 sq, bit attacker_color)
+ 234          {
+ 235   1          U8 r = sq >> 2;
+ 236   1          U8 f = sq & 3;
+ 237   1          signed char nr, nf;
+ 238   1          U8 i, nsq, piece, type;
+ 239   1      
+ 240   1          /* ---------- Knight attacks ---------- */
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 5   
 
-             -;
- 241   2          }
- 242   1      
- 243   1          /* ---------- Rook / Queen attacks ---------- */
- 244   1          for (i = 0; i < 4; i++) {
- 245   2              nr = r;
- 246   2              nf = f;
+ 241   1          for (i = 0; i < 8; i++) {
+ 242   2              nr = r + dr_knight[i];
+ 243   2              nf = f + df_knight[i];
+ 244   2      
+ 245   2              if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
+ 246   2                  continue;
  247   2      
- 248   2              while (1) {
- 249   3                  nr += dr_rook[i];
- 250   3                  nf += df_rook[i];
- 251   3      
- 252   3                  if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
- 253   3                      break;
- 254   3      
- 255   3                  nsq = (nr << 2) | nf;
- 256   3                  piece = BoardState[nsq];
- 257   3      
- 258   3                  if ((piece & TYPE_MASK) == TYPE_EMPTY)
- 259   3                      continue;
- 260   3      
- 261   3                  if (((piece & COLOR_WHITE) != 0) == attacker_color) {
- 262   4                      type = piece & TYPE_MASK;
- 263   4                      if (type == TYPE_ROOK || type == TYPE_QUEEN)
- 264   4                          return 1;
- 265   4                  }
- 266   3                  break;  // blocked
- 267   3              }
- 268   2          }
- 269   1      
- 270   1          /* ---------- Bishop / Queen attacks ---------- */
- 271   1          for (i = 0; i < 4; i++) {
- 272   2              nr = r;
- 273   2              nf = f;
- 274   2      
- 275   2              while (1) {
- 276   3                  nr += dr_bishop[i];
- 277   3                  nf += df_bishop[i];
- 278   3      
- 279   3                  if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
- 280   3                      break;
- 281   3      
- 282   3                  nsq = (nr << 2) | nf;
- 283   3                  piece = BoardState[nsq];
- 284   3      
- 285   3                  if ((piece & TYPE_MASK) == TYPE_EMPTY)
- 286   3                      continue;
- 287   3      
- 288   3                  if (((piece & COLOR_WHITE) != 0) == attacker_color) {
- 289   4                      type = piece & TYPE_MASK;
- 290   4                      if (type == TYPE_BISHOP || type == TYPE_QUEEN)
- 291   4                          return 1;
- 292   4                  }
- 293   3                  break;
- 294   3              }
- 295   2          }
- 296   1      
- 297   1          /* ---------- King attacks (adjacent squares) ---------- */
- 298   1          for (i = 0; i < 8; i++) {
- 299   2              nr = r + dr[i];
- 300   2              nf = f + df[i];
- 301   2      
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/07/2026 00:14:50 PAGE 6   
+ 248   2              nsq = (nr << SHIFT) | nf;
+ 249   2              piece = BoardState[nsq];
+ 250   2      
+ 251   2              if ((piece & TYPE_MASK) == TYPE_KNIGHT && ((piece & COLOR_WHITE) != 0) == attacker_color) return 1
+             -;
+ 252   2          }
+ 253   1      
+ 254   1          /* ---------- Rook / Queen attacks ---------- */
+ 255   1          for (i = 0; i < 4; i++) {
+ 256   2              nr = r;
+ 257   2              nf = f;
+ 258   2      
+ 259   2              while (1) {
+ 260   3                  nr += dr_rook[i];
+ 261   3                  nf += df_rook[i];
+ 262   3      
+ 263   3                  if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
+ 264   3                      break;
+ 265   3      
+ 266   3                  nsq = (nr << SHIFT) | nf;
+ 267   3                  piece = BoardState[nsq];
+ 268   3      
+ 269   3                  if ((piece & TYPE_MASK) == TYPE_EMPTY)
+ 270   3                      continue;
+ 271   3      
+ 272   3                  if (((piece & COLOR_WHITE) != 0) == attacker_color) {
+ 273   4                      type = piece & TYPE_MASK;
+ 274   4                      if (type == TYPE_ROOK || type == TYPE_QUEEN)
+ 275   4                          return 1;
+ 276   4                  }
+ 277   3                  break;  // blocked
+ 278   3              }
+ 279   2          }
+ 280   1      
+ 281   1          /* ---------- Bishop / Queen attacks ---------- */
+ 282   1          for (i = 0; i < 4; i++) {
+ 283   2              nr = r;
+ 284   2              nf = f;
+ 285   2      
+ 286   2              while (1) {
+ 287   3                  nr += dr_bishop[i];
+ 288   3                  nf += df_bishop[i];
+ 289   3      
+ 290   3                  if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
+ 291   3                      break;
+ 292   3      
+ 293   3                  nsq = (nr << SHIFT) | nf;
+ 294   3                  piece = BoardState[nsq];
+ 295   3      
+ 296   3                  if ((piece & TYPE_MASK) == TYPE_EMPTY)
+ 297   3                      continue;
+ 298   3      
+ 299   3                  if (((piece & COLOR_WHITE) != 0) == attacker_color) {
+ 300   4                      type = piece & TYPE_MASK;
+ 301   4                      if (type == TYPE_BISHOP || type == TYPE_QUEEN)
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 6   
 
- 302   2              if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
- 303   2                  continue;
- 304   2      
- 305   2              nsq = (nr << 2) | nf;
- 306   2              piece = BoardState[nsq];
- 307   2      
- 308   2              if ((piece & TYPE_MASK) == TYPE_KING && ((piece & COLOR_WHITE) != 0) == attacker_color) return 1;
- 309   2          }
- 310   1      
- 311   1          return 0;
- 312   1      }
- 313          
- 314          
+ 302   4                          return 1;
+ 303   4                  }
+ 304   3                  break;
+ 305   3              }
+ 306   2          }
+ 307   1      
+ 308   1          /* ---------- King attacks (adjacent squares) ---------- */
+ 309   1          for (i = 0; i < 8; i++) {
+ 310   2              nr = r + dr[i];
+ 311   2              nf = f + df[i];
+ 312   2      
+ 313   2              if (nr < 0 || nr >= BOARD_W || nf < 0 || nf >= BOARD_W)
+ 314   2                  continue;
+ 315   2      
+ 316   2              nsq = (nr << SHIFT) | nf;
+ 317   2              piece = BoardState[nsq];
+ 318   2      
+ 319   2              if ((piece & TYPE_MASK) == TYPE_KING && ((piece & COLOR_WHITE) != 0) == attacker_color) return 1;
+ 320   2          }
+ 321   1      
+ 322   1          return 0;
+ 323   1      }
+ 324          
+ 325          bit is_game_over(void)
+ 326          {
+ 327   1          U8 sq;
+ 328   1          Bitboard moves;
+ 329   1      
+ 330   1          // 1) King first
+ 331   1          get_legal_moves(KingSquares[TURN], &moves, 1);
+ 332   1          if (moves.RANK[0] | moves.RANK[1] |
+ 333   1              moves.RANK[2] | moves.RANK[3])
+ 334   1              return 0;
+ 335   1      
+ 336   1          // 2) All other pieces
+ 337   1          for (sq = 0; sq < BOARD_W*BOARD_W; sq++) {
+ 338   2              if (BoardState[sq] == EMPTY) continue;
+ 339   2              if (((BoardState[sq] & COLOR_WHITE) != 0) != TURN) continue;
+ 340   2              if ((BoardState[sq] & TYPE_MASK) == TYPE_KING) continue;
+ 341   2      
+ 342   2              get_legal_moves(sq, &moves, 1);
+ 343   2              if (moves.RANK[0] | moves.RANK[1] |
+ 344   2                  moves.RANK[2] | moves.RANK[3])
+ 345   2                  return 0;
+ 346   2          }
+ 347   1      
+ 348   1          return 1;
+ 349   1      }
+ 350          
+ 351          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1619    ----
-   CONSTANT SIZE    =   ----    ----
+   CODE SIZE        =   1436    ----
+   CONSTANT SIZE    =     56    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     48      46
+   DATA SIZE        =      1      50
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----       2
+   BIT SIZE         =   ----       3
 END OF MODULE INFORMATION.
 
 
