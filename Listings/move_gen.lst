@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 1   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/19/2026 02:57:11 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MOVE_GEN
@@ -62,7 +62,7 @@ line level    source
   52   1      
   53   1          piece_turn = (from_piece & COLOR_WHITE) != 0;
   54   1      
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 2   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/19/2026 02:57:11 PAGE 2   
 
   55   1          if (piece_turn != TURN) return;
   56   1          if (!pass) if (piece_turn != COLOR) return;
@@ -126,11 +126,11 @@ line level    source
  114   1        signed char r, f;
  115   1        
  116   1          piece = BoardState[sq];
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 3   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/19/2026 02:57:11 PAGE 3   
 
  117   1          color = piece & COLOR_WHITE;
  118   1          rank = sq >> 2;
- 119   1          file = sq & 3;
+ 119   1          file = sq & MASK;
  120   1      
  121   1          // King direction offsets
  122   1      
@@ -159,7 +159,7 @@ line level    source
  145   1          piece = BoardState[sq];
  146   1          color = piece & COLOR_WHITE;
  147   1          rank = sq >> 2;
- 148   1          file = sq & 3;
+ 148   1          file = sq & MASK;
  149   1      
  150   1          for (i = 0; i < 4; i++) {
  151   2              r = rank;
@@ -190,12 +190,12 @@ line level    source
  176   1          signed char r, f;
  177   1          U8 rank, file;
  178   1      
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 4   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/19/2026 02:57:11 PAGE 4   
 
  179   1          piece = BoardState[sq];
  180   1          color = piece & COLOR_WHITE;
  181   1          rank = sq >> 2;
- 182   1          file = sq & 3;
+ 182   1          file = sq & MASK;
  183   1      
  184   1          for (i = 0; i < 4; i++) {
  185   2              r = rank;
@@ -229,7 +229,7 @@ line level    source
  213   1          piece = BoardState[sq];
  214   1          color = piece & COLOR_WHITE;
  215   1          rank = sq >> 2;
- 216   1          file = sq & 3;
+ 216   1          file = sq & MASK;
  217   1      
  218   1          for (i = 0; i < 8; i++) {
  219   2              r = rank + dr_knight[i];
@@ -249,12 +249,12 @@ line level    source
  233          bit is_square_attacked(U8 sq, bit attacker_color)
  234          {
  235   1          U8 r = sq >> 2;
- 236   1          U8 f = sq & 3;
+ 236   1          U8 f = sq & MASK;
  237   1          signed char nr, nf;
  238   1          U8 i, nsq, piece, type;
  239   1      
  240   1          /* ---------- Knight attacks ---------- */
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 5   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/19/2026 02:57:11 PAGE 5   
 
  241   1          for (i = 0; i < 8; i++) {
  242   2              nr = r + dr_knight[i];
@@ -318,7 +318,7 @@ line level    source
  299   3                  if (((piece & COLOR_WHITE) != 0) == attacker_color) {
  300   4                      type = piece & TYPE_MASK;
  301   4                      if (type == TYPE_BISHOP || type == TYPE_QUEEN)
-C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/18/2026 11:06:25 PAGE 6   
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/19/2026 02:57:11 PAGE 6   
 
  302   4                          return 1;
  303   4                  }
@@ -365,20 +365,25 @@ line level    source
  344   2                  moves.RANK[2] | moves.RANK[3])
  345   2                  return 0;
  346   2          }
- 347   1      
- 348   1          return 1;
- 349   1      }
- 350          
- 351          
+ 347   1          
+ 348   1          GAME_OVER_INFO = 0;
+ 349   1          if (is_square_attacked(KingSquares[TURN], !TURN)) GAME_OVER_INFO = 1;
+ 350   1      
+ 351   1          return 1;
+ 352   1      }
+ 353          
+ 354          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1436    ----
+   CODE SIZE        =   1460    ----
    CONSTANT SIZE    =     56    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =      1      50
    IDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   MOVE_GEN                                                          01/19/2026 02:57:11 PAGE 7   
+
    BIT SIZE         =   ----       3
 END OF MODULE INFORMATION.
 

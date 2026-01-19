@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/18/2026 03:42:11 PAGE 1   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/19/2026 02:57:11 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SHIFT_REGISTERS
@@ -62,7 +62,7 @@ line level    source
   52   2          for (j=0; j<4; j++){
   53   3            value = SERIAL_DATA_IN;
   54   3            value &= 1;
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/18/2026 03:42:11 PAGE 2   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/19/2026 02:57:11 PAGE 2   
 
   55   3            board->RANK[j] |= ((!value) << i);
   56   3            clock_gen_parallel();
@@ -126,7 +126,7 @@ line level    source
  114   1          LATCH_RELEASE = 1;
  115   1          tm_delay_us();
  116   1          LATCH_RELEASE = 0;
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/18/2026 03:42:11 PAGE 3   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/19/2026 02:57:11 PAGE 3   
 
  117   1      }
  118          

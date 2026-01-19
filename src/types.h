@@ -2,8 +2,9 @@
 #define TYPES_H
 
 // Type Definitions
-#define BOARD_W 4
-#define SHIFT 2
+#define BOARD_W 0x04
+#define SHIFT 0x02
+#define MASK 0x03
 
 typedef unsigned char U8;
 typedef struct {

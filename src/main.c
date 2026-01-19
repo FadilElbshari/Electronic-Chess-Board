@@ -212,8 +212,9 @@ int main(void) {
 								// Boards match - piece was returned
 								U8 FromRank, FromFile;
 								
-								FromRank = (LiftedPieceSquare >> 4) & 0x0F;
-								FromFile = LiftedPieceSquare & 0x0F;
+								FromRank = LiftedPieceSquare >> SHIFT;
+								FromFile = LiftedPieceSquare & MASK;
+
 								
 								// Verify piece is back on original square
 								if ((PolledBoard.RANK[FromRank] >> FromFile) & 1) {
@@ -254,7 +255,7 @@ int main(void) {
 										if ((LeftMask.RANK[row] >> col) & 1) {
 											get_legal_moves((row << SHIFT) + col, &LegalMoves, 0);
 											DisplayBoardLEDs = LegalMoves;
-											LiftedPieceSquare = (row << 4) | col;
+											LiftedPieceSquare = (row << SHIFT) | col;
 											LED_READY = 1;
 											found = 1; 
 											break;
@@ -285,7 +286,7 @@ int main(void) {
 											for (j=0; j<BOARD_W; j++) {
 													if ((LeftMask.RANK[i] >> j) & 1) {
 															// Skip the originally lifted piece
-															if (((i<< SHIFT) + j) == (((LiftedPieceSquare >> 4) << SHIFT) + (LiftedPieceSquare & 0x0F))) continue;
+															if (((i<< SHIFT) + j) == ((LiftedPieceSquare >> SHIFT) + (LiftedPieceSquare & MASK))) continue;
 															
 															// Check if this square is a legal capture
 															if ((LegalMoves.RANK[i] >> j) & 1) {
@@ -325,7 +326,7 @@ int main(void) {
 									for (row=0; row<BOARD_W; row++) {
 										if (EnteredMask.RANK[row] & LegalMoves.RANK[row]) {
 											for (col = 0; col<BOARD_W; col++) if ((EnteredMask.RANK[row] >> col) & 1) break;
-												ToSquare = (row << 4) | col;
+												ToSquare = (row << SHIFT) | col;
 												legal = 1;
 												break;
 										}
@@ -338,11 +339,11 @@ int main(void) {
 										break;
 									}
 									
-									FromRank = (LiftedPieceSquare >> 4) & 0x0F;
-									FromFile = (LiftedPieceSquare) & 0x0F;
+									FromRank = LiftedPieceSquare >> SHIFT;
+									FromFile = LiftedPieceSquare & MASK;
 									
-									ToRank = (ToSquare >> 4) & 0x0F;
-									ToFile = (ToSquare) & 0x0F;
+									ToRank = ToSquare >> SHIFT;
+									ToFile = ToSquare & MASK;
 									
 									if ((BoardState[(FromRank << SHIFT) + FromFile] & TYPE_MASK) == TYPE_KING) {
 										KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
@@ -404,7 +405,7 @@ int main(void) {
 											if (EnteredMask.RANK[i] & LegalMoves.RANK[i]) {
 													for (j = 0; j<BOARD_W; j++) {
 															if ((EnteredMask.RANK[i] >> j) & 1) {
-																	ToSquare = (i << 4) | j;
+																	ToSquare = (i << SHIFT) | j;
 																	legal = 1;
 																	break;
 															}
@@ -420,11 +421,11 @@ int main(void) {
 											break;
 									}
 									
-									FromRank = (LiftedPieceSquare >> 4) & 0x0F;
-									FromFile = (LiftedPieceSquare) & 0x0F;
+									FromRank = LiftedPieceSquare >> SHIFT;
+									FromFile = LiftedPieceSquare & MASK;
 									
-									ToRank = (ToSquare >> 4) & 0x0F;
-									ToFile = (ToSquare) & 0x0F;
+									ToRank = ToSquare >> SHIFT;
+									ToFile = ToSquare & MASK;
 									
 									// Find captured piece square
 									for (i=0; i<BOARD_W; i++) {
@@ -507,8 +508,27 @@ int main(void) {
 			
 			case GAME_IS_OVER:
 				if (JustEnteredState) {
+					Bitboard display_over;
+					U8 square;
+					
 					JustEnteredState = 0;
-					set_leds(&OneBoard);
+					square = KingSquares[TURN];
+					
+					if (GAME_OVER_INFO == 1) {
+						display_over.RANK[0] = 0;
+						display_over.RANK[1] = 0;
+						display_over.RANK[2] = 0;
+						display_over.RANK[3] = 0;
+						display_over.RANK[square >> SHIFT] |= (1 << (square & MASK));
+					} else if (GAME_OVER_INFO == 0) {
+						display_over.RANK[0] = 0xFF;
+						display_over.RANK[1] = 0xFF;
+						display_over.RANK[2] = 0xFF;
+						display_over.RANK[3] = 0xFF;
+						
+						display_over.RANK[square >> SHIFT] &= ~(1 << (square & MASK));
+					}
+					set_leds(&display_over);
 				}
 				break;
 								

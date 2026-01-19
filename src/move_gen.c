@@ -116,7 +116,7 @@ void get_king_moves(U8 sq, Bitboard *board) {
 		piece = BoardState[sq];
     color = piece & COLOR_WHITE;
     rank = sq >> 2;
-    file = sq & 3;
+    file = sq & MASK;
 
     // King direction offsets
 
@@ -145,7 +145,7 @@ void get_rook_moves(U8 sq, Bitboard *board) {
     piece = BoardState[sq];
     color = piece & COLOR_WHITE;
     rank = sq >> 2;
-    file = sq & 3;
+    file = sq & MASK;
 
     for (i = 0; i < 4; i++) {
         r = rank;
@@ -179,7 +179,7 @@ void get_bishop_moves(U8 sq, Bitboard *board) {
     piece = BoardState[sq];
     color = piece & COLOR_WHITE;
     rank = sq >> 2;
-    file = sq & 3;
+    file = sq & MASK;
 
     for (i = 0; i < 4; i++) {
         r = rank;
@@ -213,7 +213,7 @@ void get_knight_moves(U8 sq, Bitboard *board) {
     piece = BoardState[sq];
     color = piece & COLOR_WHITE;
     rank = sq >> 2;
-    file = sq & 3;
+    file = sq & MASK;
 
     for (i = 0; i < 8; i++) {
         r = rank + dr_knight[i];
@@ -233,7 +233,7 @@ void get_knight_moves(U8 sq, Bitboard *board) {
 bit is_square_attacked(U8 sq, bit attacker_color)
 {
     U8 r = sq >> 2;
-    U8 f = sq & 3;
+    U8 f = sq & MASK;
     signed char nr, nf;
     U8 i, nsq, piece, type;
 
@@ -344,6 +344,9 @@ bit is_game_over(void)
             moves.RANK[2] | moves.RANK[3])
             return 0;
     }
+		
+		GAME_OVER_INFO = 0;
+		if (is_square_attacked(KingSquares[TURN], !TURN)) GAME_OVER_INFO = 1;
 
     return 1;
 }

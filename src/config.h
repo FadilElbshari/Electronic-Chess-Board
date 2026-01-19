@@ -6,10 +6,6 @@
 #define clr(pin) pin=0
 #define init_shift_reg() (P1 = 0xD8)
 
-#define LIFT_FLAG '!'
-#define CONNECTION_FLAG '#'
-#define MOVE_FLAG '*'
-
 #define WHITE 1
 #define BLACK 0
 

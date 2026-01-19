@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 1   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/19/2026 02:57:11 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE INTERRUPTS
@@ -62,7 +62,7 @@ line level    source
   52   3                  if (c == 0xAA) {
   53   4                      rxChecksum = 0;
   54   4                      rxState = RX_WAIT_TYPE;
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 2   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/19/2026 02:57:11 PAGE 2   
 
   55   4                  }
   56   3                  break;
@@ -126,7 +126,7 @@ line level    source
  114   1        rxPacketReady = 0;
  115   1      
  116   1        switch (rxType) {
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 3   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/19/2026 02:57:11 PAGE 3   
 
  117   2          case CONNECTION_PACKET:
  118   2            CONNECTED = 1;
@@ -190,7 +190,7 @@ line level    source
  176   1        if (!txPacketReady) return;
  177   1        txPacketReady = 0;
  178   1        
-C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/18/2026 03:42:11 PAGE 4   
+C51 COMPILER V9.60.7.0   INTERRUPTS                                                        01/19/2026 02:57:11 PAGE 4   
 
  179   1        txChecksum = 0;
  180   1        
