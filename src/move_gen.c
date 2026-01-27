@@ -19,11 +19,8 @@ static const signed char code df_bishop[4] = { -1,  1, -1,  1 };
 static const signed char code dr_knight[8] = { -2, -2, -1, -1,  1,  1,  2,  2 };
 static const signed char code df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
 
-// Pawn directions
-static const U8 code pawn_forward[2][4] = {
-    {0x02, 0x04, 0x08, 0x10},  // White
-    {0x10, 0x08, 0x04, 0x02}   // Black
-};
+#define WHITE_PAWN_START_RANK 1
+#define BLACK_PAWN_START_RANK 6
 
 
 U8 GAME_OVER_INFO = 0;
@@ -57,6 +54,9 @@ void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
 
     /* --- Generate pseudo-legal moves --- */
     switch (from_piece & TYPE_MASK) {
+				case TYPE_PAWN:
+						get_pawn_moves(sq, &pseudo_board);
+            break;
         case TYPE_KNIGHT:
             get_knight_moves(sq, &pseudo_board);
             break;
@@ -109,13 +109,60 @@ void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
 }
 
 
+void get_pawn_moves(U8 sq, Bitboard *board) { 
+		U8 color, rank, file, new_sq, new_rank, target, start_rank;
+		signed char dir, step;
+		
+		rank = sq >> SHIFT;
+    file = sq & MASK;
+	
+		color = BoardState[sq] & COLOR_WHITE;
+	
+		if (color & COLOR_WHITE) {
+			dir = 1;
+			start_rank = WHITE_PAWN_START_RANK;
+		} else {
+			dir = -1;
+			start_rank = BLACK_PAWN_START_RANK;
+		}
+	 
+		step = dir << SHIFT;
+		new_rank = rank + dir;
+		
+		if (new_rank < BOARD_W && new_rank >=0) {
+			new_sq = sq + step;
+			
+			if ((BoardState[new_sq] & TYPE_MASK) == TYPE_EMPTY) { // VALID SINGLE PUSH
+				board->RANK[new_rank] |= (1 << file);
+				new_sq += step; 
+				
+				if (rank == start_rank && (BoardState[new_sq] & TYPE_MASK) == TYPE_EMPTY) board->RANK[new_rank + dir] |= (1 << file); // DOUBLE PUSH
+			}
+		}
+		
+		 
+	// CAPTURES
+	if (file > 0) {
+		new_sq = sq + step - 1; // LEFT CAPTURE - WHTIE
+		target = BoardState[new_sq];
+		if ((target & TYPE_MASK) != TYPE_EMPTY && (target & COLOR_WHITE) != color) board->RANK[new_rank] |= (1 << (file-1)); 
+	}
+		
+	if (file < BOARD_W - 1) {
+		new_sq = sq + step + 1; // RIGHT CAPTURE - WHTIE
+		target = BoardState[new_sq];
+		if ((target & TYPE_MASK) != TYPE_EMPTY && (target & COLOR_WHITE) != color) board->RANK[new_rank] |= (1 << (file+1)); 
+	}
+	
+}
+
 void get_king_moves(U8 sq, Bitboard *board) {
 	U8 i, piece, color, rank, file, new_sq, target;
 	signed char r, f;
 	
 		piece = BoardState[sq];
     color = piece & COLOR_WHITE;
-    rank = sq >> 2;
+    rank = sq >> SHIFT;
     file = sq & MASK;
 
     // King direction offsets
@@ -144,7 +191,7 @@ void get_rook_moves(U8 sq, Bitboard *board) {
 
     piece = BoardState[sq];
     color = piece & COLOR_WHITE;
-    rank = sq >> 2;
+    rank = sq >> SHIFT;
     file = sq & MASK;
 
     for (i = 0; i < 4; i++) {
@@ -178,7 +225,7 @@ void get_bishop_moves(U8 sq, Bitboard *board) {
 
     piece = BoardState[sq];
     color = piece & COLOR_WHITE;
-    rank = sq >> 2;
+    rank = sq >> SHIFT;
     file = sq & MASK;
 
     for (i = 0; i < 4; i++) {
@@ -212,7 +259,7 @@ void get_knight_moves(U8 sq, Bitboard *board) {
 
     piece = BoardState[sq];
     color = piece & COLOR_WHITE;
-    rank = sq >> 2;
+    rank = sq >> SHIFT;
     file = sq & MASK;
 
     for (i = 0; i < 8; i++) {
@@ -230,9 +277,8 @@ void get_knight_moves(U8 sq, Bitboard *board) {
     }
 }
 
-bit is_square_attacked(U8 sq, bit attacker_color)
-{
-    U8 r = sq >> 2;
+bit is_square_attacked(U8 sq, bit attacker_color) {
+    U8 r = sq >> SHIFT;
     U8 f = sq & MASK;
     signed char nr, nf;
     U8 i, nsq, piece, type;

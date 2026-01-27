@@ -4,7 +4,7 @@
 // Type Definitions
 #define BOARD_W 0x04
 #define SHIFT 0x02
-#define MASK 0x03
+#define MASK BOARD_W - 1
 
 typedef unsigned char U8;
 typedef struct {

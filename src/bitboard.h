@@ -15,7 +15,7 @@ extern Bitboard CurrentBoard;
 extern Bitboard LeftMask;
 extern Bitboard EnteredMask;
 extern Bitboard LegalMoves;
-extern Bitboard IntermediateBoard;
+extern Bitboard xdata IntermediateBoard;
 extern Bitboard xdata MoveBoard;
 
 extern const Bitboard code ZeroBoard;
@@ -26,8 +26,8 @@ extern bit TURN;
 extern bit COLOR;
 
 extern U8 KingSquares[2];
-extern U8 RookMoved[2][2];
-extern U8 KingMoved[2];
+extern U8 xdata RookMoved[2][2];
+extern U8 xdata KingMoved[2];
 extern U8 xdata BoardState[BOARD_W * BOARD_W];
 
 extern U8 LiftedPieceSquare;

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   52   3            tm_display_digits(MoveSquares[1] + 9 + 1, MoveSquares[0] + 1, MoveSquares[3] + 9 + 1, MoveSquares[2] + 
              -1);
   53   3            CurrentMainState = AWAIT_MOVE_SET;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 2   
 
   54   3            JustEnteredState = 1;
   55   3          }
@@ -126,7 +126,7 @@ line level    source
  113   3              
  114   3              if (DelayCounter != 0) break;
  115   3              
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 3   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 3   
 
  116   3              // Try to read sensors
  117   3              if (!read_and_verify_sensors()) {
@@ -149,13 +149,13 @@ line level    source
  134   4                  ToFile = MoveSquares[3];
  135   4                  
  136   4                  // Update king position if king moved
- 137   4                  if ((BoardState[(FromRank << SHIFT) + FromFile] & TYPE_MASK) == TYPE_KING) {
+ 137   4                  if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
  138   5                      KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
  139   5                  }
  140   4                  
  141   4                  // Update BoardState array
- 142   4                  BoardState[(ToRank << SHIFT) + ToFile] = BoardState[(FromRank << SHIFT) + FromFile];
- 143   4                  BoardState[(FromRank << SHIFT) + FromFile] = EMPTY;
+ 142   4                  BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
+ 143   4                  BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
  144   4                  
  145   4                  // Update CurrentBoard to new position
  146   4                  CurrentBoard = MoveBoard;
@@ -190,7 +190,7 @@ line level    source
  175   4                JustEnteredState = 0;
  176   4                CLEAR_LEDS();
  177   4                DelayCounter = 2;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 4   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 4   
 
  178   4                
  179   4              }
@@ -254,7 +254,7 @@ line level    source
  237   3            // CHANGE_DETECTED STATE MANAGEMENT 
  238   3            case CHANGE_DETECTED:
  239   3              if (JustEnteredState) JustEnteredState = 0;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 5   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 5   
 
  240   3                
  241   3                get_left_entered(&CurrentBoard, &PolledBoard);
@@ -272,7 +272,7 @@ line level    source
  253   5                      for (row=0; row<BOARD_W; row++) {
  254   6                        if (found) break; for (col=0; col<BOARD_W; col++) {
  255   7                          if ((LeftMask.RANK[row] >> col) & 1) {
- 256   8                            get_legal_moves((row << SHIFT) + col, &LegalMoves, 0);
+ 256   8                            get_legal_moves((row << SHIFT) | col, &LegalMoves, 0);
  257   8                            DisplayBoardLEDs = LegalMoves;
  258   8                            LiftedPieceSquare = (row << SHIFT) | col;
  259   8                            LED_READY = 1;
@@ -305,7 +305,7 @@ line level    source
  286   6                            for (j=0; j<BOARD_W; j++) {
  287   7                                if ((LeftMask.RANK[i] >> j) & 1) {
  288   8                                    // Skip the originally lifted piece
- 289   8                                    if (((i<< SHIFT) + j) == ((LiftedPieceSquare >> SHIFT) + (LiftedPieceSquare & MASK))) conti
+ 289   8                                    if (((i<< SHIFT) | j) == ((LiftedPieceSquare >> SHIFT) | (LiftedPieceSquare & MASK))) conti
              -nue;
  290   8                                    
  291   8                                    // Check if this square is a legal capture
@@ -318,7 +318,7 @@ line level    source
  298   6                            if (valid_capture) break;
  299   6                        }
  300   5                        
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 6   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 6   
 
  301   5                        if (!valid_capture) {
  302   6                            CurrentMainState = ERROR_FLASH_ON;
@@ -367,13 +367,13 @@ line level    source
  345   5                        ToRank = ToSquare >> SHIFT;
  346   5                        ToFile = ToSquare & MASK;
  347   5                        
- 348   5                        if ((BoardState[(FromRank << SHIFT) + FromFile] & TYPE_MASK) == TYPE_KING) {
+ 348   5                        if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
  349   6                          KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
  350   6                        }
  351   5                        
  352   5                        
- 353   5                        BoardState[(ToRank << SHIFT) + ToFile] = BoardState[(FromRank << SHIFT) + FromFile];
- 354   5                        BoardState[(FromRank << SHIFT) + FromFile] = EMPTY;
+ 353   5                        BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
+ 354   5                        BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
  355   5                        
  356   5                        CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
  357   5                        CurrentBoard.RANK[ToRank] |= 1 << ToFile;
@@ -382,7 +382,7 @@ line level    source
  360   5                        TURN = !TURN;
  361   5                        
  362   5                        CurrentDetectionState = NONE;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 7   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 7   
 
  363   5                        CurrentMainState = DETECTING;
  364   5                        CLEAR_LEGAL_MOVES();
@@ -446,7 +446,7 @@ line level    source
  422   6                        }
  423   5                        
  424   5                        FromRank = LiftedPieceSquare >> SHIFT;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 8   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 8   
 
  425   5                        FromFile = LiftedPieceSquare & MASK;
  426   5                        
@@ -457,7 +457,7 @@ line level    source
  431   5                        for (i=0; i<BOARD_W; i++) {
  432   6                            for (j=0; j<BOARD_W; j++) {
  433   7                                if ((LeftMask.RANK[i] >> j) & 1) {
- 434   8                                    if (((i<< SHIFT) + j) != ((FromRank << SHIFT) + FromFile)) {
+ 434   8                                    if (((i<< SHIFT) | j) != ((FromRank << SHIFT) | FromFile)) {
  435   9                                        CapturedRank = i;
  436   9                                        CapturedFile = j;
  437   9                                        break;
@@ -467,14 +467,14 @@ line level    source
  441   6                        }
  442   5                        
  443   5                        // Update king position if king moved
- 444   5                        if ((BoardState[(FromRank << SHIFT) + FromFile] & TYPE_MASK) == TYPE_KING) {
+ 444   5                        if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
  445   6                            KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
  446   6                        }
  447   5                        
  448   5                        // Update board state
- 449   5                        BoardState[(ToRank << SHIFT) + ToFile] = BoardState[(FromRank << SHIFT) + FromFile];
- 450   5                        BoardState[(FromRank << SHIFT) + FromFile] = EMPTY;
- 451   5                        BoardState[(CapturedRank << SHIFT) + CapturedFile] = EMPTY;
+ 449   5                        BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
+ 450   5                        BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
+ 451   5                        BoardState[(CapturedRank << SHIFT) | CapturedFile] = EMPTY;
  452   5                        
  453   5                        // Update current board bitboard
  454   5                        CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
@@ -510,7 +510,7 @@ line level    source
  484   4                    // Still in intermediate state
  485   4                    else if (get_bit_count(LeftMask) == 0 && get_bit_count(EnteredMask) == 0) {
  486   5                        CurrentMainState = DETECTING;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 9   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 9   
 
  487   5                        break;
  488   5                    }
@@ -574,7 +574,7 @@ line level    source
  546   4                    ErrorFlashCount = 0;
  547   4                    
  548   4                    if (read_and_verify_sensors()) {
-C51 COMPILER V9.60.7.0   MAIN                                                              01/19/2026 02:57:11 PAGE 10  
+C51 COMPILER V9.60.7.0   MAIN                                                              01/27/2026 08:27:33 PAGE 10  
 
  549   5                        MATCH = compare_boards(&CurrentBoard, &PolledBoard);
  550   5                        
@@ -625,7 +625,7 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1997    ----
+   CODE SIZE        =   2024    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

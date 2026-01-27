@@ -134,13 +134,13 @@ int main(void) {
 						ToFile = MoveSquares[3];
 						
 						// Update king position if king moved
-						if ((BoardState[(FromRank << SHIFT) + FromFile] & TYPE_MASK) == TYPE_KING) {
+						if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
 								KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
 						}
 						
 						// Update BoardState array
-						BoardState[(ToRank << SHIFT) + ToFile] = BoardState[(FromRank << SHIFT) + FromFile];
-						BoardState[(FromRank << SHIFT) + FromFile] = EMPTY;
+						BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
+						BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
 						
 						// Update CurrentBoard to new position
 						CurrentBoard = MoveBoard;
@@ -253,7 +253,7 @@ int main(void) {
 								for (row=0; row<BOARD_W; row++) {
 									if (found) break; for (col=0; col<BOARD_W; col++) {
 										if ((LeftMask.RANK[row] >> col) & 1) {
-											get_legal_moves((row << SHIFT) + col, &LegalMoves, 0);
+											get_legal_moves((row << SHIFT) | col, &LegalMoves, 0);
 											DisplayBoardLEDs = LegalMoves;
 											LiftedPieceSquare = (row << SHIFT) | col;
 											LED_READY = 1;
@@ -286,7 +286,7 @@ int main(void) {
 											for (j=0; j<BOARD_W; j++) {
 													if ((LeftMask.RANK[i] >> j) & 1) {
 															// Skip the originally lifted piece
-															if (((i<< SHIFT) + j) == ((LiftedPieceSquare >> SHIFT) + (LiftedPieceSquare & MASK))) continue;
+															if (((i<< SHIFT) | j) == ((LiftedPieceSquare >> SHIFT) | (LiftedPieceSquare & MASK))) continue;
 															
 															// Check if this square is a legal capture
 															if ((LegalMoves.RANK[i] >> j) & 1) {
@@ -345,13 +345,13 @@ int main(void) {
 									ToRank = ToSquare >> SHIFT;
 									ToFile = ToSquare & MASK;
 									
-									if ((BoardState[(FromRank << SHIFT) + FromFile] & TYPE_MASK) == TYPE_KING) {
+									if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
 										KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
 									}
 									
 									
-									BoardState[(ToRank << SHIFT) + ToFile] = BoardState[(FromRank << SHIFT) + FromFile];
-									BoardState[(FromRank << SHIFT) + FromFile] = EMPTY;
+									BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
+									BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
 									
 									CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
 									CurrentBoard.RANK[ToRank] |= 1 << ToFile;
@@ -431,7 +431,7 @@ int main(void) {
 									for (i=0; i<BOARD_W; i++) {
 											for (j=0; j<BOARD_W; j++) {
 													if ((LeftMask.RANK[i] >> j) & 1) {
-															if (((i<< SHIFT) + j) != ((FromRank << SHIFT) + FromFile)) {
+															if (((i<< SHIFT) | j) != ((FromRank << SHIFT) | FromFile)) {
 																	CapturedRank = i;
 																	CapturedFile = j;
 																	break;
@@ -441,14 +441,14 @@ int main(void) {
 									}
 									
 									// Update king position if king moved
-									if ((BoardState[(FromRank << SHIFT) + FromFile] & TYPE_MASK) == TYPE_KING) {
+									if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
 											KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
 									}
 									
 									// Update board state
-									BoardState[(ToRank << SHIFT) + ToFile] = BoardState[(FromRank << SHIFT) + FromFile];
-									BoardState[(FromRank << SHIFT) + FromFile] = EMPTY;
-									BoardState[(CapturedRank << SHIFT) + CapturedFile] = EMPTY;
+									BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
+									BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
+									BoardState[(CapturedRank << SHIFT) | CapturedFile] = EMPTY;
 									
 									// Update current board bitboard
 									CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);

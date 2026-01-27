@@ -11,19 +11,28 @@ Bitboard CurrentBoard;
 Bitboard LeftMask;
 Bitboard EnteredMask;
 Bitboard LegalMoves;
-Bitboard IntermediateBoard;
+Bitboard xdata IntermediateBoard;
 Bitboard xdata MoveBoard;
 
-const Bitboard code ZeroBoard = {{0x00, 0x00, 0x00, 0x00}};
-const Bitboard code OneBoard = {{0xFF, 0xFF, 0xFF, 0xFF}};
+#if BOARD_W == 4
+	const Bitboard code ZeroBoard = {{0x00, 0x00, 0x00, 0x00}};
+	const Bitboard code OneBoard = {{0xFF, 0xFF, 0xFF, 0xFF}};
+
+#elif BOARD_W == 8
+	const Bitboard code ZeroBoard = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+	const Bitboard code OneBoard = {{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
+	
+#else
+#error "Unsupported BOARD_W: must be 4 or 8"
+#endif
 
 bit MATCH = 0;
 bit TURN = WHITE;
 bit COLOR = WHITE;
 
 U8 KingSquares[2] = {0, 0};
-U8 RookMoved[2][2] = {{0, 0}, {0, 0}};
-U8 KingMoved[2] = {0, 0};
+U8 xdata RookMoved[2][2] = {{0, 0}, {0, 0}};
+U8 xdata KingMoved[2] = {0, 0};
 
 U8 xdata BoardState[BOARD_W * BOARD_W];
 

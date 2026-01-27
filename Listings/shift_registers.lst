@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/19/2026 02:57:11 PAGE 1   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/27/2026 08:27:33 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SHIFT_REGISTERS
@@ -20,7 +20,7 @@ line level    source
   10          
   11          void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
   12   1        U8 i;
-  13   1        for (i=0; i<4; i++) {
+  13   1        for (i=0; i<BOARD_W; i++) {
   14   2          LeftMask.RANK[i] = pos_board->RANK[i] & (~new_board->RANK[i]);
   15   2          EnteredMask.RANK[i] = (~pos_board->RANK[i]) & new_board->RANK[i];
   16   2        }
@@ -62,85 +62,101 @@ line level    source
   52   2          for (j=0; j<4; j++){
   53   3            value = SERIAL_DATA_IN;
   54   3            value &= 1;
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/19/2026 02:57:11 PAGE 2   
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/27/2026 08:27:33 PAGE 2   
 
   55   3            board->RANK[j] |= ((!value) << i);
   56   3            clock_gen_parallel();
   57   3          }
   58   2        }
   59   1      
-  60   1        
-  61   1      //  for (i=0; i<4; i++) {
-  62   1      //    for (j=0; j<4; j++){
-  63   1      //      value = SERIAL_DATA_IN;
-  64   1      //      value &= 1;
-  65   1      //      board->RANK[i+4] |= ((!value) << j);
-  66   1      //      clock_gen_parallel();
-  67   1      //    }
-  68   1      //  }
-  69   1      //  
-  70   1      //  
-  71   1      //  for (i=0; i<4; i++) {
-  72   1      //    for (j=0; j<4; j++){
-  73   1      //      value = SERIAL_DATA_IN;
-  74   1      //      value &= 1;
-  75   1      //      board->RANK[i] |= ((!value) << (j+4));
-  76   1      //      clock_gen_parallel();
-  77   1      //    }
-  78   1      //  }
-  79   1      //  
-  80   1      //  for (i=0; i<4; i++) {
-  81   1      //    for (j=0; j<4; j++){
-  82   1      //      value = SERIAL_DATA_IN;
-  83   1      //      value &= 1;
-  84   1      //      board->RANK[i+4] |= ((!value) << (j+4));
-  85   1      //      clock_gen_parallel();
-  86   1      //    }
-  87   1      //  }
-  88   1      }
-  89          
-  90          void set_leds(const Bitboard *to_light_up) {
-  91   1        U8 i;
-  92   1        
-  93   1        U8 r0 = to_light_up->RANK[0];
-  94   1        U8 r1 = to_light_up->RANK[1];
-  95   1        U8 r2 = to_light_up->RANK[2];
-  96   1        U8 r3 = to_light_up->RANK[3];
-  97   1        
-  98   1        MASTER_RESET = 0;
-  99   1        clock_gen_serial();
- 100   1        MASTER_RESET = 1;
- 101   1        
- 102   1        delay_ms(1);
- 103   1        
- 104   1        for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
- 105   2              U8 shift = (U8)(3 - i);
- 106   2      
- 107   2              SERIAL_DATA_OUT = (r3 >> shift) & 1; clock_gen_serial();
- 108   2              SERIAL_DATA_OUT = (r2 >> shift) & 1; clock_gen_serial();
- 109   2              SERIAL_DATA_OUT = (r1 >> shift) & 1; clock_gen_serial();
- 110   2              SERIAL_DATA_OUT = (r0 >> shift) & 1; clock_gen_serial();
- 111   2          }
- 112   1        
- 113   1          LATCH_RELEASE = 0;
- 114   1          LATCH_RELEASE = 1;
- 115   1          tm_delay_us();
- 116   1          LATCH_RELEASE = 0;
-C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/19/2026 02:57:11 PAGE 3   
+  60   1      #if BOARD_W == 8
+                for (i=0; i<4; i++) {
+                  for (j=0; j<4; j++){
+                    value = SERIAL_DATA_IN;
+                    value &= 1;
+                    board->RANK[j+4] |= ((!value) << i);
+                    clock_gen_parallel();
+                  }
+                }
+                
+                for (i=0; i<4; i++) {
+                  for (j=0; j<4; j++){
+                    value = SERIAL_DATA_IN;
+                    value &= 1;
+                    board->RANK[j+4] |= ((!value) << (i+4));
+                    clock_gen_parallel();
+                  }
+                }
+                
+                for (i=0; i<4; i++) {
+                  for (j=0; j<4; j++){
+                    value = SERIAL_DATA_IN;
+                    value &= 1;
+                    board->RANK[j] |= ((!value) << (i+4));
+                    clock_gen_parallel();
+                  }
+                }
+              
+              #endif
+  89   1      }
+  90          
+  91          void set_leds(const Bitboard *to_light_up) {
+  92   1        U8 i;
+  93   1        
+  94   1        U8 r0 = to_light_up->RANK[0];
+  95   1        U8 r1 = to_light_up->RANK[1];
+  96   1        U8 r2 = to_light_up->RANK[2];
+  97   1        U8 r3 = to_light_up->RANK[3];
+  98   1        
+  99   1      #if BOARD_W == 8
+                U8 r4 = to_light_up->RANK[4];
+                U8 r5 = to_light_up->RANK[5];
+                U8 r6 = to_light_up->RANK[6];
+                U8 r7 = to_light_up->RANK[7];
+              #endif
+ 105   1        
+ 106   1        MASTER_RESET = 0;
+ 107   1        clock_gen_serial();
+ 108   1        MASTER_RESET = 1;
+ 109   1        
+ 110   1        delay_ms(1);
+ 111   1        
+ 112   1        for (i = 0; i < BOARD_W; i++) {          // i = bit index (your (3-i))
+ 113   2          U8 shift = (U8)((BOARD_W-1) - i);
+ 114   2      
+ 115   2          SERIAL_DATA_OUT = (r3 >> shift) & 1; clock_gen_serial();
+ 116   2          SERIAL_DATA_OUT = (r2 >> shift) & 1; clock_gen_serial();
+C51 COMPILER V9.60.7.0   SHIFT_REGISTERS                                                   01/27/2026 08:27:33 PAGE 3   
 
- 117   1      }
- 118          
- 119          
- 120          void clock_gen_serial() {
- 121   1        SERIAL_CLK = 1;
- 122   1        tm_delay_us();
- 123   1        SERIAL_CLK = 0;
- 124   1      }
- 125          void clock_gen_parallel() {
- 126   1        PARALLEL_CLK = 1;
- 127   1        tm_delay_us();
- 128   1        PARALLEL_CLK = 0;
- 129   1      }
+ 117   2          SERIAL_DATA_OUT = (r1 >> shift) & 1; clock_gen_serial();
+ 118   2          SERIAL_DATA_OUT = (r0 >> shift) & 1; clock_gen_serial();
+ 119   2          
+ 120   2      #if BOARD_W == 8
+                  SERIAL_DATA_OUT = (r4 >> shift) & 1; clock_gen_serial();
+                  SERIAL_DATA_OUT = (r5 >> shift) & 1; clock_gen_serial();
+                  SERIAL_DATA_OUT = (r6 >> shift) & 1; clock_gen_serial();
+                  SERIAL_DATA_OUT = (r7 >> shift) & 1; clock_gen_serial();
+              #endif
+ 126   2          
+ 127   2          }
+ 128   1        
+ 129   1          LATCH_RELEASE = 0;
+ 130   1          LATCH_RELEASE = 1;
+ 131   1          tm_delay_us();
+ 132   1          LATCH_RELEASE = 0;
+ 133   1      }
+ 134          
+ 135          
+ 136          void clock_gen_serial() {
+ 137   1        SERIAL_CLK = 1;
+ 138   1        tm_delay_us();
+ 139   1        SERIAL_CLK = 0;
+ 140   1      }
+ 141          void clock_gen_parallel() {
+ 142   1        PARALLEL_CLK = 1;
+ 143   1        tm_delay_us();
+ 144   1        PARALLEL_CLK = 0;
+ 145   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE

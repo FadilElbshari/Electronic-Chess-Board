@@ -14,10 +14,7 @@ volatile bit CONNECTED = 0;
 volatile bit POSITION_DONE = 0;
 volatile bit MOVE_RECEIVED = 0;
 
-volatile U8 ReceivingMoveCounter = 0;
-volatile U8 ReceivingPositionCounter = 0;
-
-volatile U8 MoveSquares[4] = {0};
+volatile U8 xdata MoveSquares[4] = {0};
 
 volatile ISRState CurrentISRState = NOT_CONNECTED;
 volatile Bitboard xdata DisplayBoardLEDs;
