@@ -47,7 +47,7 @@ void read_hall_effect_sensors(Bitboard *board) {
 	clock_gen_parallel();
 	CLK_ENABLE = 0;
 	
-	
+	// Bottom left board
 	for (i=0; i<4; i++) {
 		for (j=0; j<4; j++){
 			value = SERIAL_DATA_IN;
@@ -58,15 +58,18 @@ void read_hall_effect_sensors(Bitboard *board) {
 	}
 
 #if BOARD_W == 8
+	
+	// Bottom right board
 	for (i=0; i<4; i++) {
 		for (j=0; j<4; j++){
 			value = SERIAL_DATA_IN;
 			value &= 1;
-			board->RANK[j+4] |= ((!value) << i);
+			board->RANK[j] |= ((!value) << (i+4));
 			clock_gen_parallel();
 		}
 	}
 	
+	// Top right board
 	for (i=0; i<4; i++) {
 		for (j=0; j<4; j++){
 			value = SERIAL_DATA_IN;
@@ -76,11 +79,12 @@ void read_hall_effect_sensors(Bitboard *board) {
 		}
 	}
 	
+	// Top left board
 	for (i=0; i<4; i++) {
 		for (j=0; j<4; j++){
 			value = SERIAL_DATA_IN;
 			value &= 1;
-			board->RANK[j] |= ((!value) << (i+4));
+			board->RANK[j+4] |= ((!value) << i);
 			clock_gen_parallel();
 		}
 	}
@@ -109,22 +113,49 @@ void set_leds(const Bitboard *to_light_up) {
 	
 	delay_ms(1);
 	
-	for (i = 0; i < BOARD_W; i++) {          // i = bit index (your (3-i))
-		U8 shift = (U8)((BOARD_W-1) - i);
+	// Top left board
+	for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
+		U8 shift = (U8)(3 - i);
+
+		SERIAL_DATA_OUT = (r7 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r6 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r5 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r4 >> shift) & 1; clock_gen_serial();
+		
+  }
+	
+	// Top right board
+	for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
+		U8 shift = (U8)(7 - i);
+
+		SERIAL_DATA_OUT = (r7 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r6 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r5 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r4 >> shift) & 1; clock_gen_serial();
+		
+  }
+	
+	// Bottom right board
+	for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
+		U8 shift = (U8)(7 - i);
 
 		SERIAL_DATA_OUT = (r3 >> shift) & 1; clock_gen_serial();
 		SERIAL_DATA_OUT = (r2 >> shift) & 1; clock_gen_serial();
 		SERIAL_DATA_OUT = (r1 >> shift) & 1; clock_gen_serial();
 		SERIAL_DATA_OUT = (r0 >> shift) & 1; clock_gen_serial();
 		
-#if BOARD_W == 8
-		SERIAL_DATA_OUT = (r4 >> shift) & 1; clock_gen_serial();
-		SERIAL_DATA_OUT = (r5 >> shift) & 1; clock_gen_serial();
-		SERIAL_DATA_OUT = (r6 >> shift) & 1; clock_gen_serial();
-		SERIAL_DATA_OUT = (r7 >> shift) & 1; clock_gen_serial();
-#endif
+  }
+	
+	// Bottom left board
+	for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
+		U8 shift = (U8)(3 - i);
+
+		SERIAL_DATA_OUT = (r3 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r2 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r1 >> shift) & 1; clock_gen_serial();
+		SERIAL_DATA_OUT = (r0 >> shift) & 1; clock_gen_serial();
 		
-    }
+  }
 	
 		LATCH_RELEASE = 0;
 		LATCH_RELEASE = 1;

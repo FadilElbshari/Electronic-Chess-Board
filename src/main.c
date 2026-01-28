@@ -19,7 +19,11 @@
     LegalMoves.RANK[0] = 0; \
     LegalMoves.RANK[1] = 0; \
     LegalMoves.RANK[2] = 0; \
-    LegalMoves.RANK[3] = 0
+    LegalMoves.RANK[3] = 0; \
+		LegalMoves.RANK[4] = 0; \
+    LegalMoves.RANK[5] = 0; \
+    LegalMoves.RANK[6] = 0; \
+    LegalMoves.RANK[7] = 0
 
 		
 bit JustEnteredState = 1;
@@ -60,6 +64,7 @@ int main(void) {
 			
 			case TURNED_ON:
 				if (JustEnteredState) {
+					tm_display_digits(1, 2, 2, 1);
 					JustEnteredState = 0;
 					set_leds(&OneBoard);
 				}
@@ -75,6 +80,7 @@ int main(void) {
 			case AWAIT_INITIAL_POSITION_SET:
 				
 				if (JustEnteredState){
+					tm_display_digits(2, 3, 3, 2);
 					if (LED_READY) {
 						JustEnteredState = 0;
 						LED_READY = 0;
@@ -172,6 +178,7 @@ int main(void) {
 			// DETECTION STATE MANAGEMENT
 			case DETECTING:
 				if (JustEnteredState) {
+					tm_display_digits(3, 4, 4, 3);
 					JustEnteredState = 0;
 					CLEAR_LEDS();
 					DelayCounter = 2;

@@ -132,10 +132,14 @@ void process_rx_packet(void) {
 			DisplayBoardLEDs.RANK[1] = 0;
 			DisplayBoardLEDs.RANK[2] = 0;
 			DisplayBoardLEDs.RANK[3] = 0;
+			DisplayBoardLEDs.RANK[4] = 0;
+			DisplayBoardLEDs.RANK[5] = 0;
+			DisplayBoardLEDs.RANK[6] = 0;
+			DisplayBoardLEDs.RANK[7] = 0;
 							
 			for (i=0; i<BOARD_W; i++){
 				for (j=0; j<BOARD_W; j++) {
-					if (((BoardState[(i << 2) + j] & TYPE_MASK) != TYPE_EMPTY)) {
+					if (((BoardState[(i << SHIFT) | j] & TYPE_MASK) != TYPE_EMPTY)) {
 						DisplayBoardLEDs.RANK[i] |= (1 << j);
 					}
 				}
@@ -150,6 +154,10 @@ void process_rx_packet(void) {
 			DisplayBoardLEDs.RANK[1] = 0;
 			DisplayBoardLEDs.RANK[2] = 0;
 			DisplayBoardLEDs.RANK[3] = 0;
+			DisplayBoardLEDs.RANK[4] = 0;
+			DisplayBoardLEDs.RANK[5] = 0;
+			DisplayBoardLEDs.RANK[6] = 0;
+			DisplayBoardLEDs.RANK[7] = 0;
 		
 			for (i=0; i<4; i++) MoveSquares[i] = rxBuffer[i];
 	
