@@ -4,6 +4,7 @@
 #include "types.h"
 
 bit compare_boards(Bitboard *a, Bitboard *b);
+void CLEAR_LEGAL_MOVES(void);
 
 
 // ===================================================================================

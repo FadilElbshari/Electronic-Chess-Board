@@ -15,16 +15,6 @@
 		
 		
 #define CLEAR_LEDS() set_leds(&ZeroBoard)
-#define CLEAR_LEGAL_MOVES() \
-    LegalMoves.RANK[0] = 0; \
-    LegalMoves.RANK[1] = 0; \
-    LegalMoves.RANK[2] = 0; \
-    LegalMoves.RANK[3] = 0; \
-		LegalMoves.RANK[4] = 0; \
-    LegalMoves.RANK[5] = 0; \
-    LegalMoves.RANK[6] = 0; \
-    LegalMoves.RANK[7] = 0
-
 		
 bit JustEnteredState = 1;
 U8 CurrentMainState = TURNED_ON;
@@ -215,7 +205,7 @@ int main(void) {
             // Check if piece returned to original square
 						get_left_entered(&CurrentBoard, &PolledBoard);
 						
-						if (get_bit_count(LeftMask) == 0 && get_bit_count(EnteredMask) == 0) {
+						if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 0) {
 								// Boards match - piece was returned
 								U8 FromRank, FromFile;
 								
@@ -250,15 +240,18 @@ int main(void) {
 					switch (CurrentDetectionState){
 
 						case NONE:
-							if (get_bit_count(LeftMask) == 1 && get_bit_count(EnteredMask) == 0) {
+							tm_display_digits(1, 1, 1, 1);
+							if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 0) {
 								U8 row, col;
 								bit found;
 								found = 0;
+								
 								CurrentDetectionState = LIFT;
 								CurrentMainState = DETECTING;
 								JustEnteredState = 1;
 								for (row=0; row<BOARD_W; row++) {
-									if (found) break; for (col=0; col<BOARD_W; col++) {
+									if (found) break;
+									for (col=0; col<BOARD_W; col++) {
 										if ((LeftMask.RANK[row] >> col) & 1) {
 											get_legal_moves((row << SHIFT) | col, &LegalMoves, 0);
 											DisplayBoardLEDs = LegalMoves;
@@ -277,12 +270,12 @@ int main(void) {
 					
 						case LIFT:
 							// Piece still lifted
-							if (get_bit_count(LeftMask) == 1 && get_bit_count(EnteredMask) == 0) {
+							if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 0) {
 								CurrentMainState = DETECTING; 
 								break;
 								
 								// Capture in progress: removed opponent's piece while holding yours
-							} else if (get_bit_count(LeftMask) == 2 && get_bit_count(EnteredMask) == 0) {
+							} else if (get_bit_count(&LeftMask) == 2 && get_bit_count(&EnteredMask) == 0) {
 									bit valid_capture;
 									U8 i, j;
 									
@@ -319,7 +312,7 @@ int main(void) {
 									break;
 									
 							// Piece placed on new square, check if legal
-							} else if (get_bit_count(LeftMask) == 1 && get_bit_count(EnteredMask) == 1) {
+							} else if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 1) {
 									bit legal;
 									U8 ToSquare;
 									U8 row, col;
@@ -397,7 +390,7 @@ int main(void) {
 						case CAPTURE_INTERMEDIATE:
 							get_left_entered(&IntermediateBoard, &PolledBoard);
 							// Waiting for captured piece to be placed on new square
-							if (get_bit_count(LeftMask) == 0 && get_bit_count(EnteredMask) == 1) {
+							if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 1) {
 									bit legal;
 									U8 ToSquare;
 									U8 FromRank, FromFile;
@@ -489,7 +482,7 @@ int main(void) {
 							}
 							
 							// Still in intermediate state
-							else if (get_bit_count(LeftMask) == 0 && get_bit_count(EnteredMask) == 0) {
+							else if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 0) {
 									CurrentMainState = DETECTING;
 									break;
 							}
@@ -526,12 +519,20 @@ int main(void) {
 						display_over.RANK[1] = 0;
 						display_over.RANK[2] = 0;
 						display_over.RANK[3] = 0;
+						display_over.RANK[4] = 0;
+						display_over.RANK[5] = 0;
+						display_over.RANK[6] = 0;
+						display_over.RANK[7] = 0;
 						display_over.RANK[square >> SHIFT] |= (1 << (square & MASK));
 					} else if (GAME_OVER_INFO == 0) {
 						display_over.RANK[0] = 0xFF;
 						display_over.RANK[1] = 0xFF;
 						display_over.RANK[2] = 0xFF;
 						display_over.RANK[3] = 0xFF;
+						display_over.RANK[4] = 0xFF;
+						display_over.RANK[5] = 0xFF;
+						display_over.RANK[6] = 0xFF;
+						display_over.RANK[7] = 0xFF;
 						
 						display_over.RANK[square >> SHIFT] &= ~(1 << (square & MASK));
 					}

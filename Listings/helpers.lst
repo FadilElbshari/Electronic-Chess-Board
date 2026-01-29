@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   HELPERS                                                           01/28/2026 00:20:58 PAGE 1   
+C51 COMPILER V9.60.7.0   HELPERS                                                           01/29/2026 19:30:00 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE HELPERS
@@ -41,15 +41,29 @@ line level    source
   31   2          }
   32   1      }
   33          
-  34          // ==============================================================================
-  35          // =========================Delay Functionality END =============================
-  36          // ==============================================================================
+  34          U8 get_bit_count(const Bitboard *board) {
+  35   1          return BITCOUNT8(board->RANK[0]) +
+  36   1              BITCOUNT8(board->RANK[1]) +
+  37   1              BITCOUNT8(board->RANK[2]) +
+  38   1              BITCOUNT8(board->RANK[3]) +
+  39   1              BITCOUNT8(board->RANK[4]) +
+  40   1              BITCOUNT8(board->RANK[5]) +
+  41   1              BITCOUNT8(board->RANK[6]) +
+  42   1              BITCOUNT8(board->RANK[7]); 
+  43   1      }
+  44          
+  45          
+  46          // ==============================================================================
+  47          // =========================Delay Functionality END =============================
+  48          // ==============================================================================
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     40    ----
+   CODE SIZE        =    179    ----
    CONSTANT SIZE    =     16    ----
    XDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   HELPERS                                                           01/29/2026 19:30:00 PAGE 2   
+
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

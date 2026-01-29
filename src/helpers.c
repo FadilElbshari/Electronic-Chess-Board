@@ -31,6 +31,18 @@ void delay_ms(unsigned int ms) {
     }
 }
 
+U8 get_bit_count(const Bitboard *board) {
+		return BITCOUNT8(board->RANK[0]) +
+				BITCOUNT8(board->RANK[1]) +
+				BITCOUNT8(board->RANK[2]) +
+				BITCOUNT8(board->RANK[3]) +
+				BITCOUNT8(board->RANK[4]) +
+				BITCOUNT8(board->RANK[5]) +
+				BITCOUNT8(board->RANK[6]) +
+				BITCOUNT8(board->RANK[7]); 
+}
+
+
 // ==============================================================================
 // =========================Delay Functionality END =============================
 // ==============================================================================

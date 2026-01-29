@@ -39,6 +39,10 @@ void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
 		pseudo_board.RANK[1] = 0;
 		pseudo_board.RANK[2] = 0;
 		pseudo_board.RANK[3] = 0;
+		pseudo_board.RANK[4] = 0;
+		pseudo_board.RANK[5] = 0;
+		pseudo_board.RANK[6] = 0;
+		pseudo_board.RANK[7] = 0;
 
     *legal_board  = ZeroBoard;
 
@@ -81,8 +85,7 @@ void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
     for (r = 0; r < BOARD_W; r++) {
         for (f = 0; f < BOARD_W; f++) {
 
-            if (!(pseudo_board.RANK[r] & (1 << f)))
-                continue;
+            if (!(pseudo_board.RANK[r] & (1 << f))) continue;
 
             to_sq = (r << SHIFT) | f;
 
@@ -139,16 +142,15 @@ void get_pawn_moves(U8 sq, Bitboard *board) {
 				if (rank == start_rank && (BoardState[new_sq] & TYPE_MASK) == TYPE_EMPTY) board->RANK[new_rank + dir] |= (1 << file); // DOUBLE PUSH
 			}
 		}
-		
 		 
 	// CAPTURES
-	if (file > 0) {
+	if (file > 0 && new_rank >= 0 && new_rank < BOARD_W) {
 		new_sq = sq + step - 1; // LEFT CAPTURE - WHTIE
 		target = BoardState[new_sq];
 		if ((target & TYPE_MASK) != TYPE_EMPTY && (target & COLOR_WHITE) != color) board->RANK[new_rank] |= (1 << (file-1)); 
 	}
 		
-	if (file < BOARD_W - 1) {
+	if (file < BOARD_W - 1 && new_rank >= 0 && new_rank < BOARD_W) {
 		new_sq = sq + step + 1; // RIGHT CAPTURE - WHTIE
 		target = BoardState[new_sq];
 		if ((target & TYPE_MASK) != TYPE_EMPTY && (target & COLOR_WHITE) != color) board->RANK[new_rank] |= (1 << (file+1)); 
@@ -280,8 +282,27 @@ void get_knight_moves(U8 sq, Bitboard *board) {
 bit is_square_attacked(U8 sq, bit attacker_color) {
     U8 r = sq >> SHIFT;
     U8 f = sq & MASK;
-    signed char nr, nf;
+    signed char nr, nf, pr;
     U8 i, nsq, piece, type;
+	
+		/* ---------- Pawn attacks ------------ */
+		pr = attacker_color ? -1 : 1;
+
+		if (r + pr >= 0 && r + pr < BOARD_W) {
+				if (f > 0) {
+						piece = BoardState[((r + pr) << SHIFT) | (f - 1)];
+						if ((piece & TYPE_MASK) == TYPE_PAWN &&
+								((piece & COLOR_WHITE) != 0) == attacker_color)
+								return 1;
+				}
+				if (f < BOARD_W - 1) {
+						piece = BoardState[((r + pr) << SHIFT) | (f + 1)];
+						if ((piece & TYPE_MASK) == TYPE_PAWN &&
+								((piece & COLOR_WHITE) != 0) == attacker_color)
+								return 1;
+				}
+		}
+
 
     /* ---------- Knight attacks ---------- */
     for (i = 0; i < 8; i++) {
@@ -370,14 +391,12 @@ bit is_square_attacked(U8 sq, bit attacker_color) {
 
 bit is_game_over(void)
 {
-    U8 sq;
+    U8 sq, r;
     Bitboard moves;
 
     // 1) King first
     get_legal_moves(KingSquares[TURN], &moves, 1);
-    if (moves.RANK[0] | moves.RANK[1] |
-        moves.RANK[2] | moves.RANK[3])
-        return 0;
+    for (r = 0; r < BOARD_W; r++) if (moves.RANK[r]) return 0;
 
     // 2) All other pieces
     for (sq = 0; sq < BOARD_W*BOARD_W; sq++) {
@@ -386,9 +405,7 @@ bit is_game_over(void)
         if ((BoardState[sq] & TYPE_MASK) == TYPE_KING) continue;
 
         get_legal_moves(sq, &moves, 1);
-        if (moves.RANK[0] | moves.RANK[1] |
-            moves.RANK[2] | moves.RANK[3])
-            return 0;
+        for (r = 0; r < BOARD_W; r++) if (moves.RANK[r]) return 0;
     }
 		
 		GAME_OVER_INFO = 0;

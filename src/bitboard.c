@@ -40,6 +40,16 @@ U8 LiftedPieceSquare = 0;
 
 
 // ===================================================================================
+void CLEAR_LEGAL_MOVES() {
+	LegalMoves.RANK[0] = 0;
+	LegalMoves.RANK[1] = 0;
+	LegalMoves.RANK[2] = 0;
+	LegalMoves.RANK[3] = 0;
+	LegalMoves.RANK[4] = 0;
+	LegalMoves.RANK[5] = 0;
+	LegalMoves.RANK[6] = 0;
+	LegalMoves.RANK[7] = 0;
+}
 
 bit compare_boards(Bitboard *a, Bitboard *b) {
     U8 i;
