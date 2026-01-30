@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   51   2          
   52   2          if (DelayCounter > 0) DelayCounter--;
   53   2          switch (CurrentMainState) {
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 2   
 
   54   3            
   55   3            case TURNED_ON:
@@ -126,7 +126,7 @@ line level    source
  113   3              if (!read_and_verify_sensors()) {
  114   4                  DelayCounter = 2;
  115   4                  break;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 3   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 3   
 
  116   4              }
  117   3              
@@ -144,502 +144,400 @@ line level    source
  129   4                  ToRank = MoveSquares[2];
  130   4                  ToFile = MoveSquares[3];
  131   4                  
- 132   4                  // Update king position if king moved
- 133   4                  if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
- 134   5                      KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
- 135   5                  }
- 136   4                  
- 137   4                  // Update BoardState array
- 138   4                  BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
- 139   4                  BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
- 140   4                  
- 141   4                  // Update CurrentBoard to new position
- 142   4                  CurrentBoard = MoveBoard;
- 143   4                  
- 144   4                  // Toggle turn
- 145   4                  TURN = !TURN;
+ 132   4                  apply_move((MoveSquares[0] << SHIFT) | MoveSquares[1], (MoveSquares[2] << SHIFT) | MoveSquares[3], 0
+             -);
+ 133   4                  
+ 134   4                  if (is_game_over()) {
+ 135   5                    CurrentMainState = GAME_IS_OVER;
+ 136   5                    JustEnteredState = 1;
+ 137   5                  }
+ 138   4                  
+ 139   4                  // Clear LEDs
+ 140   4                  CLEAR_LEDS();
+ 141   4                  
+ 142   4                  // Back to detecting
+ 143   4                  CurrentMainState = DETECTING;
+ 144   4                  CurrentDetectionState = NONE;
+ 145   4                  JustEnteredState = 1;
  146   4                  
- 147   4                  // Clear LEDs
- 148   4                  CLEAR_LEDS();
- 149   4                  
- 150   4                  if (is_game_over()) {
- 151   5                    CurrentMainState = GAME_IS_OVER;
- 152   5                    JustEnteredState = 1;
- 153   5                    break;
- 154   5                  }
- 155   4                  
- 156   4                  // Back to detecting
- 157   4                  CurrentMainState = DETECTING;
- 158   4                  CurrentDetectionState = NONE;
- 159   4                  JustEnteredState = 1;
- 160   4                  
- 161   4                  break;
+ 147   4                  break;
+ 148   4              }
+ 149   3              
+ 150   3              // Board doesn't match yet - keep waiting
+ 151   3              DelayCounter = 2;
+ 152   3              break;
+ 153   3            
+ 154   3            // DETECTION STATE MANAGEMENT
+ 155   3            case DETECTING:
+ 156   3              if (JustEnteredState) {
+ 157   4                tm_display_digits(3, 4, 4, 3);
+ 158   4                JustEnteredState = 0;
+ 159   4                CLEAR_LEDS();
+ 160   4                DelayCounter = 2;
+ 161   4                
  162   4              }
  163   3              
- 164   3              // Board doesn't match yet - keep waiting
- 165   3              DelayCounter = 2;
- 166   3              break;
- 167   3            
- 168   3            // DETECTION STATE MANAGEMENT
- 169   3            case DETECTING:
- 170   3              if (JustEnteredState) {
- 171   4                tm_display_digits(3, 4, 4, 3);
- 172   4                JustEnteredState = 0;
- 173   4                CLEAR_LEDS();
- 174   4                DelayCounter = 2;
- 175   4                
- 176   4              }
- 177   3              
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 4   
+ 164   3              if (LED_READY) {
+ 165   4                LED_READY = 0;
+ 166   4                set_leds(&DisplayBoardLEDs);
+ 167   4                DelayCounter = 2;
+ 168   4              }
+ 169   3      
+ 170   3              if (DelayCounter != 0) break;
+ 171   3              
+ 172   3              if (!read_and_verify_sensors()) {
+ 173   4                    DelayCounter = 2;
+ 174   4                    break;
+ 175   4              }
+ 176   3                  
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 4   
 
- 178   3              if (LED_READY) {
- 179   4                LED_READY = 0;
- 180   4                set_leds(&DisplayBoardLEDs);
- 181   4                DelayCounter = 2;
- 182   4              }
- 183   3      
- 184   3              if (DelayCounter != 0) break;
- 185   3              
- 186   3              if (!read_and_verify_sensors()) {
- 187   4                    DelayCounter = 2;
- 188   4                    break;
- 189   4              }
- 190   3                  
- 191   3              MATCH = compare_boards(&CurrentBoard, &PolledBoard);
- 192   3      
- 193   3              if (!MATCH) {
- 194   4                JustEnteredState = 1;
- 195   4                CurrentMainState = CHANGE_DETECTED;
- 196   4                break;
- 197   4              }
- 198   3              
- 199   3              CLEAR_LEDS();
- 200   3              switch (CurrentDetectionState) {
- 201   4                case NONE:
- 202   4                  break;
- 203   4                  
- 204   4                case LIFT:
- 205   4                  // Check if piece returned to original square
- 206   4                  get_left_entered(&CurrentBoard, &PolledBoard);
- 207   4                  
- 208   4                  if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 0) {
- 209   5                      // Boards match - piece was returned
- 210   5                      U8 FromRank, FromFile;
- 211   5                      
- 212   5                      FromRank = LiftedPieceSquare >> SHIFT;
- 213   5                      FromFile = LiftedPieceSquare & MASK;
- 214   5      
- 215   5                      
- 216   5                      // Verify piece is back on original square
- 217   5                      if ((PolledBoard.RANK[FromRank] >> FromFile) & 1) {
- 218   6                          CurrentDetectionState = NONE;
- 219   6                          LiftedPieceSquare = 0;
- 220   6                          CLEAR_LEDS();
- 221   6                      } else {
- 222   6                          // Boards match but piece not on original square - ERROR
- 223   6                          CurrentMainState = ERROR_FLASH_ON;
- 224   6                          CurrentDetectionState = NONE;
- 225   6                          CLEAR_LEGAL_MOVES();
- 226   6                      }
- 227   5                  }
- 228   4                  break;
- 229   4              }
- 230   3              
- 231   3              DelayCounter = 2;
- 232   3              break;
- 233   3              
- 234   3            // CHANGE_DETECTED STATE MANAGEMENT 
- 235   3            case CHANGE_DETECTED:
- 236   3              if (JustEnteredState) JustEnteredState = 0;
- 237   3                
- 238   3                get_left_entered(&CurrentBoard, &PolledBoard);
- 239   3                
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 5   
+ 177   3              MATCH = compare_boards(&CurrentBoard, &PolledBoard);
+ 178   3      
+ 179   3              if (!MATCH) {
+ 180   4                JustEnteredState = 1;
+ 181   4                CurrentMainState = CHANGE_DETECTED;
+ 182   4                break;
+ 183   4              }
+ 184   3              
+ 185   3              CLEAR_LEDS();
+ 186   3              switch (CurrentDetectionState) {
+ 187   4                case NONE:
+ 188   4                  break;
+ 189   4                  
+ 190   4                case LIFT:
+ 191   4                  // Check if piece returned to original square
+ 192   4                  get_left_entered(&CurrentBoard, &PolledBoard);
+ 193   4                  
+ 194   4                  if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 0) {
+ 195   5                      // Boards match - piece was returned
+ 196   5                      U8 FromRank, FromFile;
+ 197   5                      
+ 198   5                      FromRank = LiftedPieceSquare >> SHIFT;
+ 199   5                      FromFile = LiftedPieceSquare & MASK;
+ 200   5      
+ 201   5                      
+ 202   5                      // Verify piece is back on original square
+ 203   5                      if ((PolledBoard.RANK[FromRank] >> FromFile) & 1) {
+ 204   6                          CurrentDetectionState = NONE;
+ 205   6                          LiftedPieceSquare = 0;
+ 206   6                          CLEAR_LEDS();
+ 207   6                      } else {
+ 208   6                          // Boards match but piece not on original square - ERROR
+ 209   6                          CurrentMainState = ERROR_FLASH_ON;
+ 210   6                          CurrentDetectionState = NONE;
+ 211   6                          CLEAR_LEGAL_MOVES();
+ 212   6                      }
+ 213   5                  }
+ 214   4                  break;
+ 215   4              }
+ 216   3              
+ 217   3              DelayCounter = 2;
+ 218   3              break;
+ 219   3              
+ 220   3            // CHANGE_DETECTED STATE MANAGEMENT 
+ 221   3            case CHANGE_DETECTED:
+ 222   3              if (JustEnteredState) JustEnteredState = 0;
+ 223   3                
+ 224   3                get_left_entered(&CurrentBoard, &PolledBoard);
+ 225   3                
+ 226   3                switch (CurrentDetectionState){
+ 227   4      
+ 228   4                  case NONE:
+ 229   4                    tm_display_digits(1, 1, 1, 1);
+ 230   4                    if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 0) {
+ 231   5                      U8 row, col;
+ 232   5                      bit found;
+ 233   5                      found = 0;
+ 234   5                      
+ 235   5                      CurrentDetectionState = LIFT;
+ 236   5                      CurrentMainState = DETECTING;
+ 237   5                      JustEnteredState = 1;
+ 238   5                      for (row=0; row<BOARD_W; row++) {
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 5   
 
- 240   3                switch (CurrentDetectionState){
- 241   4      
- 242   4                  case NONE:
- 243   4                    tm_display_digits(1, 1, 1, 1);
- 244   4                    if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 0) {
- 245   5                      U8 row, col;
- 246   5                      bit found;
- 247   5                      found = 0;
- 248   5                      
- 249   5                      CurrentDetectionState = LIFT;
- 250   5                      CurrentMainState = DETECTING;
- 251   5                      JustEnteredState = 1;
- 252   5                      for (row=0; row<BOARD_W; row++) {
- 253   6                        if (found) break;
- 254   6                        for (col=0; col<BOARD_W; col++) {
- 255   7                          if ((LeftMask.RANK[row] >> col) & 1) {
- 256   8                            get_legal_moves((row << SHIFT) | col, &LegalMoves, 0);
- 257   8                            DisplayBoardLEDs = LegalMoves;
- 258   8                            LiftedPieceSquare = (row << SHIFT) | col;
- 259   8                            LED_READY = 1;
- 260   8                            found = 1; 
- 261   8                            break;
- 262   8                          }
- 263   7                        }
- 264   6                      }
- 265   5                      break;
- 266   5                    }
- 267   4                    // ADD LOGGING HERE
- 268   4                    
- 269   4                    CurrentMainState = ERROR_FLASH_ON;
- 270   4                    break;
- 271   4                    
- 272   4                
- 273   4                  case LIFT:
- 274   4                    // Piece still lifted
- 275   4                    if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 0) {
- 276   5                      CurrentMainState = DETECTING; 
- 277   5                      break;
- 278   5                      
- 279   5                      // Capture in progress: removed opponent's piece while holding yours
- 280   5                    } else if (get_bit_count(&LeftMask) == 2 && get_bit_count(&EnteredMask) == 0) {
- 281   5                        bit valid_capture;
- 282   5                        U8 i, j;
- 283   5                        
- 284   5                        valid_capture = 0;
- 285   5                        
- 286   5                        // Check if one of the left pieces is a legal capture square
- 287   5                        for (i=0; i<BOARD_W; i++) {
- 288   6                            for (j=0; j<BOARD_W; j++) {
- 289   7                                if ((LeftMask.RANK[i] >> j) & 1) {
- 290   8                                    // Skip the originally lifted piece
- 291   8                                    if (((i<< SHIFT) | j) == ((LiftedPieceSquare >> SHIFT) | (LiftedPieceSquare & MASK))) conti
+ 239   6                        if (found) break;
+ 240   6                        for (col=0; col<BOARD_W; col++) {
+ 241   7                          if ((LeftMask.RANK[row] >> col) & 1) {
+ 242   8                            get_legal_moves((row << SHIFT) | col, &LegalMoves, 0);
+ 243   8                            DisplayBoardLEDs = LegalMoves;
+ 244   8                            LiftedPieceSquare = (row << SHIFT) | col;
+ 245   8                            LED_READY = 1;
+ 246   8                            found = 1; 
+ 247   8                            break;
+ 248   8                          }
+ 249   7                        }
+ 250   6                      }
+ 251   5                      break;
+ 252   5                    }
+ 253   4                    CurrentMainState = ERROR_FLASH_ON;
+ 254   4                    break;
+ 255   4                    
+ 256   4                
+ 257   4                  case LIFT:
+ 258   4                    // Piece still lifted
+ 259   4                    if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 0) {
+ 260   5                      CurrentMainState = DETECTING; 
+ 261   5                      break;
+ 262   5                      
+ 263   5                      // Capture in progress: removed opponent's piece while holding yours
+ 264   5                    } else if (get_bit_count(&LeftMask) == 2 && get_bit_count(&EnteredMask) == 0) {
+ 265   5                        bit valid_capture;
+ 266   5                        U8 i, j;
+ 267   5                        
+ 268   5                        valid_capture = 0;
+ 269   5                        
+ 270   5                        // Check if one of the left pieces is a legal capture square
+ 271   5                        for (i=0; i<BOARD_W; i++) {
+ 272   6                            for (j=0; j<BOARD_W; j++) {
+ 273   7                                if ((LeftMask.RANK[i] >> j) & 1) {
+ 274   8                                    // Skip the originally lifted piece
+ 275   8                                    if (((i<< SHIFT) | j) == ((LiftedPieceSquare >> SHIFT) | (LiftedPieceSquare & MASK))) conti
              -nue;
- 292   8                                    
- 293   8                                    // Check if this square is a legal capture
- 294   8                                    if ((LegalMoves.RANK[i] >> j) & 1) {
- 295   9                                        valid_capture = 1;
- 296   9                                        break;
- 297   9                                    }
- 298   8                                }
- 299   7                            }
- 300   6                            if (valid_capture) break;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 6   
+ 276   8                                    
+ 277   8                                    // Check if this square is a legal capture
+ 278   8                                    if ((LegalMoves.RANK[i] >> j) & 1) {
+ 279   9                                        valid_capture = 1;
+ 280   9                                        break;
+ 281   9                                    }
+ 282   8                                }
+ 283   7                            }
+ 284   6                            if (valid_capture) break;
+ 285   6                        }
+ 286   5                        
+ 287   5                        if (!valid_capture) {
+ 288   6                            CurrentMainState = ERROR_FLASH_ON;
+ 289   6                            CurrentDetectionState = NONE;
+ 290   6                            CLEAR_LEGAL_MOVES();
+ 291   6                            break;
+ 292   6                        }
+ 293   5                        
+ 294   5                        // Valid capture - wait for piece to be placed
+ 295   5                        IntermediateBoard = PolledBoard;
+ 296   5                        CurrentDetectionState = CAPTURE_INTERMEDIATE;
+ 297   5                        CurrentMainState = DETECTING;
+ 298   5                        break;
+ 299   5                        
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 6   
 
- 301   6                        }
- 302   5                        
- 303   5                        if (!valid_capture) {
- 304   6                            CurrentMainState = ERROR_FLASH_ON;
- 305   6                            CurrentDetectionState = NONE;
- 306   6                            CLEAR_LEGAL_MOVES();
- 307   6                            break;
- 308   6                        }
- 309   5                        
- 310   5                        // Valid capture - wait for piece to be placed
- 311   5                        IntermediateBoard = PolledBoard;
- 312   5                        CurrentDetectionState = CAPTURE_INTERMEDIATE;
- 313   5                        CurrentMainState = DETECTING;
- 314   5                        break;
- 315   5                        
- 316   5                    // Piece placed on new square, check if legal
- 317   5                    } else if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 1) {
- 318   5                        bit legal;
- 319   5                        U8 ToSquare;
- 320   5                        U8 row, col;
- 321   5                        
- 322   5                        U8 FromRank, FromFile;
- 323   5                        U8 ToRank, ToFile;
+ 300   5                    // Piece placed on new square, check if legal
+ 301   5                    } else if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 1) {
+ 302   5                        bit legal;
+ 303   5                        U8 ToSquare;
+ 304   5                        U8 row, col;
+ 305   5                        
+ 306   5                        ToSquare = 0;
+ 307   5                        legal = 0;
+ 308   5                        
+ 309   5                        for (row=0; row<BOARD_W; row++) {
+ 310   6                          if (EnteredMask.RANK[row] & LegalMoves.RANK[row]) {
+ 311   7                            for (col = 0; col<BOARD_W; col++) if ((EnteredMask.RANK[row] >> col) & 1) break;
+ 312   7                              ToSquare = (row << SHIFT) | col;
+ 313   7                              legal = 1;
+ 314   7                              break;
+ 315   7                          }
+ 316   6                        }
+ 317   5                        
+ 318   5                        if (!legal) {
+ 319   6                          CurrentMainState = ERROR_FLASH_ON;
+ 320   6                          CurrentDetectionState = NONE;
+ 321   6                          CLEAR_LEGAL_MOVES();
+ 322   6                          break;
+ 323   6                        }
  324   5                        
- 325   5                        ToSquare = 0;
- 326   5                        legal = 0;
- 327   5                        
- 328   5                        for (row=0; row<BOARD_W; row++) {
- 329   6                          if (EnteredMask.RANK[row] & LegalMoves.RANK[row]) {
- 330   7                            for (col = 0; col<BOARD_W; col++) if ((EnteredMask.RANK[row] >> col) & 1) break;
- 331   7                              ToSquare = (row << SHIFT) | col;
- 332   7                              legal = 1;
- 333   7                              break;
- 334   7                          }
- 335   6                        }
- 336   5                        
- 337   5                        if (!legal) {
- 338   6                          CurrentMainState = ERROR_FLASH_ON;
- 339   6                          CurrentDetectionState = NONE;
- 340   6                          CLEAR_LEGAL_MOVES();
- 341   6                          break;
- 342   6                        }
- 343   5                        
- 344   5                        FromRank = LiftedPieceSquare >> SHIFT;
- 345   5                        FromFile = LiftedPieceSquare & MASK;
- 346   5                        
- 347   5                        ToRank = ToSquare >> SHIFT;
- 348   5                        ToFile = ToSquare & MASK;
- 349   5                        
- 350   5                        if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
- 351   6                          KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
- 352   6                        }
- 353   5                        
+ 325   5                        CurrentDetectionState = NONE;
+ 326   5                        CurrentMainState = DETECTING;
+ 327   5                        CLEAR_LEGAL_MOVES();
+ 328   5                        
+ 329   5                        apply_move(LiftedPieceSquare, ToSquare, 1);
+ 330   5                        
+ 331   5                        if (is_game_over()) {
+ 332   6                          CurrentMainState = GAME_IS_OVER;
+ 333   6                          JustEnteredState = 1;
+ 334   6                        }
+ 335   5                        
+ 336   5                        break;
+ 337   5                      
+ 338   5                    } else {
+ 339   5                        CurrentMainState = DETECTING; 
+ 340   5                      break;
+ 341   5                    }
+ 342   4                    
+ 343   4                    
+ 344   4                  case CAPTURE_INTERMEDIATE:
+ 345   4                    get_left_entered(&IntermediateBoard, &PolledBoard);
+ 346   4                  
+ 347   4                    // Waiting for captured piece to be placed on new square
+ 348   4                    if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 1) {
+ 349   5                        bit legal;
+ 350   5                        U8 ToSquare;
+ 351   5                        U8 i, j;
+ 352   5                        
+ 353   5                        legal = 0;
  354   5                        
- 355   5                        BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
- 356   5                        BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
- 357   5                        
- 358   5                        CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
- 359   5                        CurrentBoard.RANK[ToRank] |= 1 << ToFile;
- 360   5                        
- 361   5                        // Toggle turn
- 362   5                        TURN = !TURN;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 7   
+ 355   5                        // Find where piece was placed
+ 356   5                        for (i=0; i<BOARD_W; i++) {
+ 357   6                            if (EnteredMask.RANK[i] & LegalMoves.RANK[i]) {
+ 358   7                                for (j = 0; j<BOARD_W; j++) {
+ 359   8                                    if ((EnteredMask.RANK[i] >> j) & 1) {
+ 360   9                                        ToSquare = (i << SHIFT) | j;
+ 361   9                                        legal = 1;
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 7   
 
- 363   5                        
- 364   5                        CurrentDetectionState = NONE;
- 365   5                        CurrentMainState = DETECTING;
- 366   5                        CLEAR_LEGAL_MOVES();
- 367   5                        
- 368   5                        txHeader = HEADER;
- 369   5                        txType = MOVE_PACKET;
- 370   5                        txLen = 0x02;
- 371   5                        
- 372   5                        txBuffer[0] = LiftedPieceSquare;
- 373   5                        txBuffer[1] = ToSquare;
- 374   5                        
- 375   5                        txPacketReady = 1;
- 376   5                        
- 377   5                        if (is_game_over()) {
- 378   6                          CurrentMainState = GAME_IS_OVER;
- 379   6                          JustEnteredState = 1;
- 380   6                          break;
- 381   6                        }
- 382   5                        
- 383   5                        break;
- 384   5                      
- 385   5                      
- 386   5                    } else {
- 387   5                        CurrentMainState = DETECTING; 
- 388   5                      break;
- 389   5                    }
- 390   4                    
- 391   4                    
- 392   4                  case CAPTURE_INTERMEDIATE:
- 393   4                    get_left_entered(&IntermediateBoard, &PolledBoard);
- 394   4                    // Waiting for captured piece to be placed on new square
- 395   4                    if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 1) {
- 396   5                        bit legal;
- 397   5                        U8 ToSquare;
- 398   5                        U8 FromRank, FromFile;
- 399   5                        U8 ToRank, ToFile;
- 400   5                        U8 CapturedRank, CapturedFile;
- 401   5                        U8 i, j;
- 402   5                        
- 403   5                        legal = 0;
- 404   5                        
- 405   5                        // Find where piece was placed
- 406   5                        for (i=0; i<BOARD_W; i++) {
- 407   6                            if (EnteredMask.RANK[i] & LegalMoves.RANK[i]) {
- 408   7                                for (j = 0; j<BOARD_W; j++) {
- 409   8                                    if ((EnteredMask.RANK[i] >> j) & 1) {
- 410   9                                        ToSquare = (i << SHIFT) | j;
- 411   9                                        legal = 1;
- 412   9                                        break;
- 413   9                                    }
- 414   8                                }
- 415   7                                if (legal) break;
- 416   7                            }
- 417   6                        }
- 418   5                        
- 419   5                        if (!legal) {
- 420   6                            CurrentMainState = ERROR_FLASH_ON;
- 421   6                            CurrentDetectionState = NONE;
- 422   6                            CLEAR_LEGAL_MOVES();
- 423   6                            break;
- 424   6                        }
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 8   
+ 362   9                                        break;
+ 363   9                                    }
+ 364   8                                }
+ 365   7                                if (legal) break;
+ 366   7                            }
+ 367   6                        }
+ 368   5                        
+ 369   5                        if (!legal) {
+ 370   6                            CurrentMainState = ERROR_FLASH_ON;
+ 371   6                            CurrentDetectionState = NONE;
+ 372   6                            CLEAR_LEGAL_MOVES();
+ 373   6                            break;
+ 374   6                        }
+ 375   5                        
+ 376   5                        CurrentDetectionState = NONE;
+ 377   5                        CurrentMainState = DETECTING;
+ 378   5                        CLEAR_LEGAL_MOVES();
+ 379   5                        
+ 380   5                        apply_move(LiftedPieceSquare, ToSquare, 1);
+ 381   5                        
+ 382   5                        if (is_game_over()) {
+ 383   6                          CurrentMainState = GAME_IS_OVER;
+ 384   6                          JustEnteredState = 1;
+ 385   6                        }
+ 386   5                        
+ 387   5                        break;
+ 388   5                    }
+ 389   4                    
+ 390   4                    // Still in intermediate state
+ 391   4                    else if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 0) {
+ 392   5                        CurrentMainState = DETECTING;
+ 393   5                        break;
+ 394   5                    }
+ 395   4                    
+ 396   4                    // Unexpected state
+ 397   4                    else {
+ 398   5                        CurrentMainState = ERROR_FLASH_ON;
+ 399   5                        CurrentDetectionState = NONE;
+ 400   5                        CLEAR_LEGAL_MOVES();
+ 401   5                        break;
+ 402   5                    }
+ 403   4                    
+ 404   4                    default:
+ 405   4                      // Should never reach here, but recover gracefully
+ 406   4                      CurrentMainState = ERROR_FLASH_ON;
+ 407   4                      CurrentDetectionState = NONE;
+ 408   4                      CLEAR_LEGAL_MOVES();
+ 409   4                      break;
+ 410   4                  }
+ 411   3            
+ 412   3              break;
+ 413   3              
+ 414   3            
+ 415   3            case GAME_IS_OVER:
+ 416   3              if (JustEnteredState) {
+ 417   4                Bitboard display_over;
+ 418   4                U8 square;
+ 419   4                
+ 420   4                JustEnteredState = 0;
+ 421   4                square = KingSquares[TURN];
+ 422   4                
+ 423   4                if (GAME_OVER_INFO == 1) {
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 8   
 
- 425   5                        
- 426   5                        FromRank = LiftedPieceSquare >> SHIFT;
- 427   5                        FromFile = LiftedPieceSquare & MASK;
- 428   5                        
- 429   5                        ToRank = ToSquare >> SHIFT;
- 430   5                        ToFile = ToSquare & MASK;
- 431   5                        
- 432   5                        // Find captured piece square
- 433   5                        for (i=0; i<BOARD_W; i++) {
- 434   6                            for (j=0; j<BOARD_W; j++) {
- 435   7                                if ((LeftMask.RANK[i] >> j) & 1) {
- 436   8                                    if (((i<< SHIFT) | j) != ((FromRank << SHIFT) | FromFile)) {
- 437   9                                        CapturedRank = i;
- 438   9                                        CapturedFile = j;
- 439   9                                        break;
- 440   9                                    }
- 441   8                                }
- 442   7                            }
- 443   6                        }
- 444   5                        
- 445   5                        // Update king position if king moved
- 446   5                        if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
- 447   6                            KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
- 448   6                        }
- 449   5                        
- 450   5                        // Update board state
- 451   5                        BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
- 452   5                        BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
- 453   5                        BoardState[(CapturedRank << SHIFT) | CapturedFile] = EMPTY;
- 454   5                        
- 455   5                        // Update current board bitboard
- 456   5                        CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
- 457   5                        CurrentBoard.RANK[CapturedRank] &= ~(1 << CapturedFile);
- 458   5                        CurrentBoard.RANK[ToRank] |= 1 << ToFile;
- 459   5                        
- 460   5                        // Toggle turn
- 461   5                        TURN = !TURN;
- 462   5                        
- 463   5                        CurrentDetectionState = NONE;
- 464   5                        CurrentMainState = DETECTING;
- 465   5                        CLEAR_LEGAL_MOVES();
- 466   5                        
- 467   5                        // Send move to host
- 468   5                        txHeader = HEADER;
- 469   5                        txType = MOVE_PACKET;
- 470   5                        txLen = 0x02;
- 471   5                        
- 472   5                        txBuffer[0] = LiftedPieceSquare;
- 473   5                        txBuffer[1] = ToSquare;
- 474   5                        
- 475   5                        txPacketReady = 1;
- 476   5                        
- 477   5                        if (is_game_over()) {
- 478   6                          CurrentMainState = GAME_IS_OVER;
- 479   6                          JustEnteredState = 1;
- 480   6                          break;
- 481   6                        }
- 482   5                        
- 483   5                        break;
- 484   5                    }
- 485   4                    
- 486   4                    // Still in intermediate state
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 9   
+ 424   5                  display_over.RANK[0] = 0;
+ 425   5                  display_over.RANK[1] = 0;
+ 426   5                  display_over.RANK[2] = 0;
+ 427   5                  display_over.RANK[3] = 0;
+ 428   5                  display_over.RANK[4] = 0;
+ 429   5                  display_over.RANK[5] = 0;
+ 430   5                  display_over.RANK[6] = 0;
+ 431   5                  display_over.RANK[7] = 0;
+ 432   5                  display_over.RANK[square >> SHIFT] |= (1 << (square & MASK));
+ 433   5                } else if (GAME_OVER_INFO == 0) {
+ 434   5                  display_over.RANK[0] = 0xFF;
+ 435   5                  display_over.RANK[1] = 0xFF;
+ 436   5                  display_over.RANK[2] = 0xFF;
+ 437   5                  display_over.RANK[3] = 0xFF;
+ 438   5                  display_over.RANK[4] = 0xFF;
+ 439   5                  display_over.RANK[5] = 0xFF;
+ 440   5                  display_over.RANK[6] = 0xFF;
+ 441   5                  display_over.RANK[7] = 0xFF;
+ 442   5                  
+ 443   5                  display_over.RANK[square >> SHIFT] &= ~(1 << (square & MASK));
+ 444   5                }
+ 445   4                set_leds(&display_over);
+ 446   4              }
+ 447   3              break;
+ 448   3                      
+ 449   3                    
+ 450   3            case ERROR_FLASH_ON:
+ 451   3                if (JustEnteredState) {
+ 452   4                    JustEnteredState = 0;
+ 453   4                    set_leds(&OneBoard);  // All LEDs on = ERROR
+ 454   4                    ErrorFlashCount++;
+ 455   4                }
+ 456   3                
+ 457   3                if (DelayCounter != 0) break;
+ 458   3                
+ 459   3                if (ErrorFlashCount >= 6) {
+ 460   4                    ErrorFlashCount = 0;
+ 461   4                    
+ 462   4                    if (read_and_verify_sensors()) {
+ 463   5                        MATCH = compare_boards(&CurrentBoard, &PolledBoard);
+ 464   5                        
+ 465   5                        if (MATCH) {
+ 466   6                            // Board corrected!
+ 467   6                            CurrentMainState = DETECTING;
+ 468   6                            CurrentDetectionState = NONE;
+ 469   6                            CLEAR_LEDS();
+ 470   6                            JustEnteredState = 1;
+ 471   6                            DelayCounter = 10;
+ 472   6                            break;
+ 473   6                        }
+ 474   5                    }
+ 475   4                    
+ 476   4                    // Still wrong - show expected position
+ 477   4                    set_leds(&CurrentBoard);  // Show where pieces SHOULD be
+ 478   4                    DelayCounter = 50;  // Display for 500ms
+ 479   4                    ErrorFlashCount = 0;  // Reset to flash again
+ 480   4                    break;
+ 481   4                }
+ 482   3                
+ 483   3                CurrentMainState = ERROR_FLASH_OFF;
+ 484   3                DelayCounter = 10;
+ 485   3                JustEnteredState = 1;
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 9   
 
- 487   4                    else if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 0) {
- 488   5                        CurrentMainState = DETECTING;
- 489   5                        break;
- 490   5                    }
- 491   4                    
- 492   4                    // Unexpected state
- 493   4                    else {
- 494   5                        CurrentMainState = ERROR_FLASH_ON;
- 495   5                        CurrentDetectionState = NONE;
- 496   5                        CLEAR_LEGAL_MOVES();
- 497   5                        break;
- 498   5                    }
- 499   4                    
- 500   4                    default:
- 501   4                      // Should never reach here, but recover gracefully
- 502   4                      CurrentMainState = ERROR_FLASH_ON;
- 503   4                      CurrentDetectionState = NONE;
- 504   4                      CLEAR_LEGAL_MOVES();
- 505   4                      break;
- 506   4                  }
- 507   3            
- 508   3              break;
- 509   3              
- 510   3            
- 511   3            case GAME_IS_OVER:
- 512   3              if (JustEnteredState) {
- 513   4                Bitboard display_over;
- 514   4                U8 square;
- 515   4                
- 516   4                JustEnteredState = 0;
- 517   4                square = KingSquares[TURN];
- 518   4                
- 519   4                if (GAME_OVER_INFO == 1) {
- 520   5                  display_over.RANK[0] = 0;
- 521   5                  display_over.RANK[1] = 0;
- 522   5                  display_over.RANK[2] = 0;
- 523   5                  display_over.RANK[3] = 0;
- 524   5                  display_over.RANK[4] = 0;
- 525   5                  display_over.RANK[5] = 0;
- 526   5                  display_over.RANK[6] = 0;
- 527   5                  display_over.RANK[7] = 0;
- 528   5                  display_over.RANK[square >> SHIFT] |= (1 << (square & MASK));
- 529   5                } else if (GAME_OVER_INFO == 0) {
- 530   5                  display_over.RANK[0] = 0xFF;
- 531   5                  display_over.RANK[1] = 0xFF;
- 532   5                  display_over.RANK[2] = 0xFF;
- 533   5                  display_over.RANK[3] = 0xFF;
- 534   5                  display_over.RANK[4] = 0xFF;
- 535   5                  display_over.RANK[5] = 0xFF;
- 536   5                  display_over.RANK[6] = 0xFF;
- 537   5                  display_over.RANK[7] = 0xFF;
- 538   5                  
- 539   5                  display_over.RANK[square >> SHIFT] &= ~(1 << (square & MASK));
- 540   5                }
- 541   4                set_leds(&display_over);
- 542   4              }
- 543   3              break;
- 544   3                      
- 545   3                    
- 546   3            case ERROR_FLASH_ON:
- 547   3                if (JustEnteredState) {
- 548   4                    JustEnteredState = 0;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 10  
-
- 549   4                    set_leds(&OneBoard);  // All LEDs on = ERROR
- 550   4                    ErrorFlashCount++;
- 551   4                }
- 552   3                
- 553   3                if (DelayCounter != 0) break;
- 554   3                
- 555   3                if (ErrorFlashCount >= 6) {
- 556   4                    ErrorFlashCount = 0;
- 557   4                    
- 558   4                    if (read_and_verify_sensors()) {
- 559   5                        MATCH = compare_boards(&CurrentBoard, &PolledBoard);
- 560   5                        
- 561   5                        if (MATCH) {
- 562   6                            // Board corrected!
- 563   6                            CurrentMainState = DETECTING;
- 564   6                            CurrentDetectionState = NONE;
- 565   6                            CLEAR_LEDS();
- 566   6                            JustEnteredState = 1;
- 567   6                            DelayCounter = 10;
- 568   6                            break;
- 569   6                        }
- 570   5                    }
- 571   4                    
- 572   4                    // Still wrong - show expected position
- 573   4                    set_leds(&CurrentBoard);  // Show where pieces SHOULD be
- 574   4                    DelayCounter = 50;  // Display for 500ms
- 575   4                    ErrorFlashCount = 0;  // Reset to flash again
- 576   4                    break;
- 577   4                }
- 578   3                
- 579   3                CurrentMainState = ERROR_FLASH_OFF;
- 580   3                DelayCounter = 10;
- 581   3                JustEnteredState = 1;
- 582   3                break;
- 583   3      
- 584   3            case ERROR_FLASH_OFF:
- 585   3              if (JustEnteredState) {
- 586   4                  JustEnteredState = 0;
- 587   4                  CLEAR_LEDS();
- 588   4              }
- 589   3              
- 590   3              if (DelayCounter != 0) break;
- 591   3              CurrentMainState = ERROR_FLASH_ON;
- 592   3              DelayCounter = 10;
- 593   3              JustEnteredState = 1;
- 594   3              break;
- 595   3          
- 596   3          
- 597   3          }
- 598   2          
- 599   2          delay_ms(10);
- 600   2        }
- 601   1        
- 602   1        //return 0;
- 603   1      }
- 604          
+ 486   3                break;
+ 487   3      
+ 488   3            case ERROR_FLASH_OFF:
+ 489   3              if (JustEnteredState) {
+ 490   4                  JustEnteredState = 0;
+ 491   4                  CLEAR_LEDS();
+ 492   4              }
+ 493   3              
+ 494   3              if (DelayCounter != 0) break;
+ 495   3              CurrentMainState = ERROR_FLASH_ON;
+ 496   3              DelayCounter = 10;
+ 497   3              JustEnteredState = 1;
+ 498   3              break;
+ 499   3          
+ 500   3          }
+ 501   2          
+ 502   2          delay_ms(10);
+ 503   2        }
+ 504   1      }
+ 505          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   2013    ----
+   CODE SIZE        =   1495    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
-C51 COMPILER V9.60.7.0   MAIN                                                              01/29/2026 21:06:12 PAGE 11  
-
    PDATA SIZE       =   ----    ----
    DATA SIZE        =      4       9
    IDATA SIZE       =   ----    ----

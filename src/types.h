@@ -49,6 +49,10 @@ typedef enum {
   TYPE_KING
 } PieceType;
 
+#define SHORT_ROOK 0
+#define LONG_ROOK 1
+
+
 #define EMPTY (TYPE_EMPTY)
 
 #define PAWN_W (TYPE_PAWN | COLOR_WHITE)

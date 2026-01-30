@@ -6,6 +6,9 @@
 #include "hardware.h"
 #include "bitboard.h"
 
+#define LIFT_DELAY 5
+#define SLDING_DELAY 300
+
 void clock_gen_serial();
 void clock_gen_parallel();
 void set_leds(const Bitboard *to_light_up);

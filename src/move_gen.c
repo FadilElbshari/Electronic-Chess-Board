@@ -2,6 +2,8 @@
 
 #include "types.h"
 #include "bitboard.h"
+#include "interrupts.h"
+#include "types.h"
 
 // King directions
 static const signed char code dr[8] = {-1,-1,-1,0,0,1,1,1};
@@ -24,6 +26,86 @@ static const signed char code df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
 
 
 U8 GAME_OVER_INFO = 0;
+
+
+void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
+	U8 FromRank, FromFile;
+	U8 ToRank, ToFile;
+	
+	bit whichCastlingSide, isCastling;
+	whichCastlingSide = 0;
+	isCastling = 0;
+	
+
+	FromRank = FromSquare >> SHIFT;
+	FromFile = FromSquare & MASK;
+	
+	ToRank = ToSquare >> SHIFT;
+	ToFile = ToSquare & MASK;
+	
+	if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
+		// Check if the move is short castle
+		if (!KingMoved[TURN] && ((FromFile==4 && ToFile==6) || (FromFile==4 && ToFile==2))) {
+			isCastling = 1;
+			if (ToFile == 6) {
+				whichCastlingSide = 0; // SHORT
+			} else if (ToFile == 2) { 
+				whichCastlingSide = 1; // LONG
+			}
+			
+			MoveSquares[0] = FromRank;
+			MoveSquares[1] = whichCastlingSide == 0 ? 7 : 0;
+			MoveSquares[2] = ToRank;
+			MoveSquares[3] = whichCastlingSide == 0 ? 5 : 3;
+			
+			DisplayBoardLEDs.RANK[0] = 0;
+			DisplayBoardLEDs.RANK[1] = 0;
+			DisplayBoardLEDs.RANK[2] = 0;
+			DisplayBoardLEDs.RANK[3] = 0;
+			DisplayBoardLEDs.RANK[4] = 0;
+			DisplayBoardLEDs.RANK[5] = 0;
+			DisplayBoardLEDs.RANK[6] = 0;
+			DisplayBoardLEDs.RANK[7] = 0;
+			
+			DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
+			DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+		
+			MoveBoard = CurrentBoard;
+		
+			MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
+			MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+			
+			MOVE_RECEIVED = 1;
+		}
+			
+		KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
+		KingMoved[TURN] = 1;
+	}
+	
+	if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_ROOK) {
+		RookMoved[TURN][FromFile > 4 ? LONG_ROOK : SHORT_ROOK] = 1;
+	}
+	
+	BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
+	BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
+	
+	CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
+	CurrentBoard.RANK[ToRank] |= 1 << ToFile;
+	
+	// Toggle turn
+	if (!isCastling) TURN = !TURN;
+	
+	if (!emit) return;
+	
+	txHeader = HEADER;
+	txType = MOVE_PACKET;
+	txLen = 0x02;
+	
+	txBuffer[0] = LiftedPieceSquare;
+	txBuffer[1] = ToSquare;
+	
+	txPacketReady = 1;
+}
 
 		
 void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
@@ -159,13 +241,15 @@ void get_pawn_moves(U8 sq, Bitboard *board) {
 }
 
 void get_king_moves(U8 sq, Bitboard *board) {
-	U8 i, piece, color, rank, file, new_sq, target;
+	U8 i, piece, color, rank, file, new_sq, target, side;
 	signed char r, f;
 	
 		piece = BoardState[sq];
     color = piece & COLOR_WHITE;
     rank = sq >> SHIFT;
     file = sq & MASK;
+	
+		side = (color != 0);
 
     // King direction offsets
 
@@ -184,6 +268,22 @@ void get_king_moves(U8 sq, Bitboard *board) {
             board->RANK[r] |= (1 << f);
         }
     }
+		
+		if (KingMoved[side]) return;
+		
+		// Short castling check
+		if (!RookMoved[side][SHORT_ROOK]) {
+			if (((BoardState[(rank << SHIFT) | (file+1)] & TYPE_MASK) == TYPE_EMPTY) && ((BoardState[(rank << SHIFT) | (file+2)] & TYPE_MASK) == TYPE_EMPTY)) {
+				board->RANK[rank] |= (1 << (file+2));
+			}
+		}
+		
+		// Long castling check
+		if (!RookMoved[side][LONG_ROOK]) {
+			if (((BoardState[(rank << SHIFT) | (file-1)] & TYPE_MASK) == TYPE_EMPTY) && ((BoardState[(rank << SHIFT) | (file-2)] & TYPE_MASK) == TYPE_EMPTY) && ((BoardState[(rank << SHIFT) | (file-3)] & TYPE_MASK) == TYPE_EMPTY)) {
+				board->RANK[rank] |= (1 << (file-2));
+			}
+		}
 }
 
 void get_rook_moves(U8 sq, Bitboard *board) {

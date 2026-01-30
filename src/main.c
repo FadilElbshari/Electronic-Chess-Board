@@ -129,29 +129,15 @@ int main(void) {
 						ToRank = MoveSquares[2];
 						ToFile = MoveSquares[3];
 						
-						// Update king position if king moved
-						if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
-								KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
-						}
-						
-						// Update BoardState array
-						BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
-						BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
-						
-						// Update CurrentBoard to new position
-						CurrentBoard = MoveBoard;
-						
-						// Toggle turn
-						TURN = !TURN;
-						
-						// Clear LEDs
-						CLEAR_LEDS();
+						apply_move((MoveSquares[0] << SHIFT) | MoveSquares[1], (MoveSquares[2] << SHIFT) | MoveSquares[3], 0);
 						
 						if (is_game_over()) {
 							CurrentMainState = GAME_IS_OVER;
 							JustEnteredState = 1;
-							break;
 						}
+						
+						// Clear LEDs
+						CLEAR_LEDS();
 						
 						// Back to detecting
 						CurrentMainState = DETECTING;
@@ -317,9 +303,6 @@ int main(void) {
 									U8 ToSquare;
 									U8 row, col;
 									
-									U8 FromRank, FromFile;
-									U8 ToRank, ToFile;
-									
 									ToSquare = 0;
 									legal = 0;
 									
@@ -339,47 +322,18 @@ int main(void) {
 										break;
 									}
 									
-									FromRank = LiftedPieceSquare >> SHIFT;
-									FromFile = LiftedPieceSquare & MASK;
-									
-									ToRank = ToSquare >> SHIFT;
-									ToFile = ToSquare & MASK;
-									
-									if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
-										KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
-									}
-									
-									
-									BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
-									BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
-									
-									CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
-									CurrentBoard.RANK[ToRank] |= 1 << ToFile;
-									
-									// Toggle turn
-									TURN = !TURN;
-									
 									CurrentDetectionState = NONE;
 									CurrentMainState = DETECTING;
 									CLEAR_LEGAL_MOVES();
 									
-									txHeader = HEADER;
-									txType = MOVE_PACKET;
-									txLen = 0x02;
-									
-									txBuffer[0] = LiftedPieceSquare;
-									txBuffer[1] = ToSquare;
-									
-									txPacketReady = 1;
+									apply_move(LiftedPieceSquare, ToSquare, 1);
 									
 									if (is_game_over()) {
 										CurrentMainState = GAME_IS_OVER;
 										JustEnteredState = 1;
-										break;
 									}
 									
 									break;
-								
 								
 							} else {
 									CurrentMainState = DETECTING; 
@@ -389,13 +343,11 @@ int main(void) {
 							
 						case CAPTURE_INTERMEDIATE:
 							get_left_entered(&IntermediateBoard, &PolledBoard);
+						
 							// Waiting for captured piece to be placed on new square
 							if (get_bit_count(&LeftMask) == 0 && get_bit_count(&EnteredMask) == 1) {
 									bit legal;
 									U8 ToSquare;
-									U8 FromRank, FromFile;
-									U8 ToRank, ToFile;
-									U8 CapturedRank, CapturedFile;
 									U8 i, j;
 									
 									legal = 0;
@@ -421,61 +373,15 @@ int main(void) {
 											break;
 									}
 									
-									FromRank = LiftedPieceSquare >> SHIFT;
-									FromFile = LiftedPieceSquare & MASK;
-									
-									ToRank = ToSquare >> SHIFT;
-									ToFile = ToSquare & MASK;
-									
-									// Find captured piece square
-									for (i=0; i<BOARD_W; i++) {
-											for (j=0; j<BOARD_W; j++) {
-													if ((LeftMask.RANK[i] >> j) & 1) {
-															if (((i<< SHIFT) | j) != ((FromRank << SHIFT) | FromFile)) {
-																	CapturedRank = i;
-																	CapturedFile = j;
-																	break;
-															}
-													}
-											}
-									}
-									
-									// Update king position if king moved
-									if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
-											KingSquares[TURN] = (ToRank << SHIFT) | ToFile;
-									}
-									
-									// Update board state
-									BoardState[(ToRank << SHIFT) | ToFile] = BoardState[(FromRank << SHIFT) | FromFile];
-									BoardState[(FromRank << SHIFT) | FromFile] = EMPTY;
-									BoardState[(CapturedRank << SHIFT) | CapturedFile] = EMPTY;
-									
-									// Update current board bitboard
-									CurrentBoard.RANK[FromRank] &= ~(1 << FromFile);
-									CurrentBoard.RANK[CapturedRank] &= ~(1 << CapturedFile);
-									CurrentBoard.RANK[ToRank] |= 1 << ToFile;
-									
-									// Toggle turn
-									TURN = !TURN;
-									
 									CurrentDetectionState = NONE;
 									CurrentMainState = DETECTING;
 									CLEAR_LEGAL_MOVES();
 									
-									// Send move to host
-									txHeader = HEADER;
-									txType = MOVE_PACKET;
-									txLen = 0x02;
-									
-									txBuffer[0] = LiftedPieceSquare;
-									txBuffer[1] = ToSquare;
-									
-									txPacketReady = 1;
+									apply_move(LiftedPieceSquare, ToSquare, 1);
 									
 									if (is_game_over()) {
 										CurrentMainState = GAME_IS_OVER;
 										JustEnteredState = 1;
-										break;
 									}
 									
 									break;
@@ -591,12 +497,9 @@ int main(void) {
 				JustEnteredState = 1;
 				break;
 		
-		
 		}
 		
 		delay_ms(10);
 	}
-	
-	//return 0;
 }
 

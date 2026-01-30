@@ -16,5 +16,7 @@ bit is_square_attacked(U8 sq, bit attacker_color);
 
 bit is_game_over(void);
 
+void apply_move(U8 FromSquare, U8 ToSquare, bit emit);
+
 
 #endif
