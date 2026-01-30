@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   51   2          
   52   2          if (DelayCounter > 0) DelayCounter--;
   53   2          switch (CurrentMainState) {
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 2   
 
   54   3            
   55   3            case TURNED_ON:
@@ -126,7 +126,7 @@ line level    source
  113   3              if (!read_and_verify_sensors()) {
  114   4                  DelayCounter = 2;
  115   4                  break;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 3   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 3   
 
  116   4              }
  117   3              
@@ -190,7 +190,7 @@ line level    source
  174   4                    break;
  175   4              }
  176   3                  
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 4   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 4   
 
  177   3              MATCH = compare_boards(&CurrentBoard, &PolledBoard);
  178   3      
@@ -254,7 +254,7 @@ line level    source
  236   5                      CurrentMainState = DETECTING;
  237   5                      JustEnteredState = 1;
  238   5                      for (row=0; row<BOARD_W; row++) {
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 5   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 5   
 
  239   6                        if (found) break;
  240   6                        for (col=0; col<BOARD_W; col++) {
@@ -318,7 +318,7 @@ line level    source
  297   5                        CurrentMainState = DETECTING;
  298   5                        break;
  299   5                        
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 6   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 6   
 
  300   5                    // Piece placed on new square, check if legal
  301   5                    } else if (get_bit_count(&LeftMask) == 1 && get_bit_count(&EnteredMask) == 1) {
@@ -382,7 +382,7 @@ line level    source
  359   8                                    if ((EnteredMask.RANK[i] >> j) & 1) {
  360   9                                        ToSquare = (i << SHIFT) | j;
  361   9                                        legal = 1;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 7   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 7   
 
  362   9                                        break;
  363   9                                    }
@@ -446,7 +446,7 @@ line level    source
  421   4                square = KingSquares[TURN];
  422   4                
  423   4                if (GAME_OVER_INFO == 1) {
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 8   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 8   
 
  424   5                  display_over.RANK[0] = 0;
  425   5                  display_over.RANK[1] = 0;
@@ -510,7 +510,7 @@ line level    source
  483   3                CurrentMainState = ERROR_FLASH_OFF;
  484   3                DelayCounter = 10;
  485   3                JustEnteredState = 1;
-C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 01:27:32 PAGE 9   
+C51 COMPILER V9.60.7.0   MAIN                                                              01/30/2026 12:49:44 PAGE 9   
 
  486   3                break;
  487   3      

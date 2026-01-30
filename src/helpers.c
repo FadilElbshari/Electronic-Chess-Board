@@ -6,6 +6,8 @@
 // =========================Delay Functionality START ===========================
 // ==============================================================================
 
+unsigned int ms_counter = 0;
+
 const U8 code pop4[16] = {
     0,1,1,2,1,2,2,3,
     1,2,2,3,2,3,3,4
@@ -22,6 +24,27 @@ void timer0_delay1ms(void) {
     while(TF0 == 0);
     TR0 = 0;
 }
+
+//void timer0_init(void) {
+//	TMOD &= 0xF0;
+//	TMOD |= 0x01;
+//    
+//	TH0 = 0xFC;
+//	TL0 = 0x67;
+//	
+//	ET0 = 1;
+//	EA = 1;
+//	TR0 = 1;
+//	
+//	ms_counter = 0;
+//}
+
+//void timer0_ISR(void) interrupt 1 {
+//	TH0 = 0xFC;
+//	TL0 = 0x67;
+//	
+//	if (ms_counter > 0) ms_counter--;
+//}
 
 
 void delay_ms(unsigned int ms) {

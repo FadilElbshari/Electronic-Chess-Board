@@ -111,7 +111,7 @@ void set_leds(const Bitboard *to_light_up) {
 	clock_gen_serial();
 	MASTER_RESET = 1;
 	
-	delay_ms(1);
+	tm_delay_us();
 	
 	// Top left board
 	for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))

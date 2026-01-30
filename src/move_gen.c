@@ -70,10 +70,6 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 			DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
 			DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
 		
-			MoveBoard = CurrentBoard;
-		
-			MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
-			MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
 			
 			MOVE_RECEIVED = 1;
 		}
@@ -94,6 +90,12 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	
 	// Toggle turn
 	if (!isCastling) TURN = !TURN;
+	if (isCastling) {
+			MoveBoard = CurrentBoard;
+		
+			MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
+			MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+	}
 	
 	if (!emit) return;
 	
