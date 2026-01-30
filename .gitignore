@@ -1,0 +1,11 @@
+# Keil build output
+Objects/
+Listings/
+
+# Keil user-specific files
+*.uvoptx
+*.uvgui.*
+
+# Backup / temp files
+*.bak
+*.tmp
