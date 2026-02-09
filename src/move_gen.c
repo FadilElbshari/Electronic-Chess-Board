@@ -138,7 +138,7 @@ void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
 		piece_turn = (from_piece & COLOR_WHITE) != 0;
 
 		if (piece_turn != TURN) return;
-		if (!pass) if (piece_turn != COLOR) return;
+		//if (!pass) if (piece_turn != COLOR) return;
 
     /* --- Generate pseudo-legal moves --- */
     switch (from_piece & TYPE_MASK) {

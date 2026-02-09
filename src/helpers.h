@@ -6,6 +6,7 @@
 void timer0_delay1ms(void);
 void timer0_init(void);
 void delay_ms(unsigned int ms);
+void delay_us(unsigned int d);
 U8 get_bit_count(const Bitboard* board);
 
 

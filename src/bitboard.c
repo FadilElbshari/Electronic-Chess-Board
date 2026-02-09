@@ -10,7 +10,7 @@ Bitboard PolledBoard;
 Bitboard CurrentBoard;
 Bitboard LeftMask;
 Bitboard EnteredMask;
-Bitboard LegalMoves;
+Bitboard xdata LegalMoves;
 Bitboard xdata IntermediateBoard;
 Bitboard xdata MoveBoard;
 

@@ -12,7 +12,7 @@
 #define BOARD_PACKET 0x02
 #define MOVE_PACKET 0x03
 
- // ============================= Serial ISR Variable =================================
+// ============================= Serial ISR Variable =================================
  
  typedef enum {
     RX_WAIT_HEADER,
@@ -30,6 +30,7 @@ extern volatile bit LED_READY;
 extern volatile bit CONNECTED;
 extern volatile bit POSITION_DONE;
 extern volatile bit MOVE_RECEIVED;
+extern volatile bit IS_RESET;
 
 extern volatile U8 xdata MoveSquares[4];
 extern volatile Bitboard xdata DisplayBoardLEDs;

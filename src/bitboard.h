@@ -6,6 +6,8 @@
 bit compare_boards(Bitboard *a, Bitboard *b);
 void CLEAR_LEGAL_MOVES(void);
 
+void reset_game(void);
+
 
 // ===================================================================================
 // ============================= Board State Data ====================================
@@ -15,7 +17,7 @@ extern Bitboard PolledBoard;
 extern Bitboard CurrentBoard;
 extern Bitboard LeftMask;
 extern Bitboard EnteredMask;
-extern Bitboard LegalMoves;
+extern Bitboard xdata LegalMoves;
 extern Bitboard xdata IntermediateBoard;
 extern Bitboard xdata MoveBoard;
 

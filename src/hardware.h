@@ -29,4 +29,7 @@ sbit CLK_ENABLE = P1^7; // CE'
 sbit SSD_CLK = P3^4;
 sbit SSD_DIO = P3^5;
 
+sbit LCD_SCL = P3^2;
+sbit LCD_SDA = P3^3;
+
 #endif

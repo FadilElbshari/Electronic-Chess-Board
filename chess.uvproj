@@ -421,6 +421,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\move_gen.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>LiquidCrystal_I2C_8051.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\LiquidCrystal_I2C_8051.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

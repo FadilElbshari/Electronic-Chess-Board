@@ -1,6 +1,7 @@
 #include "helpers.h"
 
 #include <REG52.H>
+#include <intrins.h>
 
 // ==============================================================================
 // =========================Delay Functionality START ===========================
@@ -63,6 +64,11 @@ U8 get_bit_count(const Bitboard *board) {
 				BITCOUNT8(board->RANK[5]) +
 				BITCOUNT8(board->RANK[6]) +
 				BITCOUNT8(board->RANK[7]); 
+}
+
+void delay_us(unsigned int d)
+{
+    while(d--) _nop_();
 }
 
 

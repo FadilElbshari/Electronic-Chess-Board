@@ -8,6 +8,7 @@
 #include "bitboard.h"
 
 
+
 void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 	U8 i;
 	for (i=0; i<BOARD_W; i++) {

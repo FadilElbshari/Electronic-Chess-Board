@@ -13,6 +13,7 @@ volatile bit LED_READY = 0;
 volatile bit CONNECTED = 0;
 volatile bit POSITION_DONE = 0;
 volatile bit MOVE_RECEIVED = 0;
+volatile bit IS_RESET = 0;
 
 volatile U8 xdata MoveSquares[4] = {0};
 
@@ -112,6 +113,7 @@ void process_rx_packet(void) {
 
 	switch (rxType) {
 		case CONNECTION_PACKET:
+			IS_RESET = 1;
 			CONNECTED = 1;
 			break;
 		

@@ -12,23 +12,49 @@
 #include "tm_ssd.h"
 #include "interrupts.h"
 #include "move_gen.h"
+#include "LiquidCrystal_I2C_8051.h"
 		
 		
 #define CLEAR_LEDS() set_leds(&ZeroBoard)
+
 		
-bit JustEnteredState = 1;
-U8 CurrentMainState = TURNED_ON;
-U8 CurrentDetectionState = NONE;
+bit JustEnteredState;
+U8 CurrentMainState;
+U8 CurrentDetectionState;
 
-U8 ErrorFlashCount = 0;
+U8 ErrorFlashCount;
 
-U8 DelayCounter = 0;
+U8 DelayCounter;
+
+void reset_game() {
+	JustEnteredState = 1;
+	CurrentMainState = TURNED_ON;
+	CurrentDetectionState = NONE;
+
+	ErrorFlashCount = 0;
+
+	DelayCounter = 0;
+	
+	RookMoved[0][0] = 0;
+	RookMoved[0][1] = 0;
+	RookMoved[1][0] = 0;
+	RookMoved[1][1] = 0;
+	
+	KingMoved[0] = 0;
+	KingMoved[1] = 0;
+	
+	TURN = WHITE;
+}
+
 
 int main(void) {
 	
 	uart_init();
 	init_shift_reg();
+	reset_game();
 	CLEAR_LEDS();
+	LCD_begin();
+	
 	
 	TURN = WHITE;
 	
@@ -38,12 +64,22 @@ int main(void) {
 		if (rxPacketReady) process_rx_packet();
 		if (txPacketReady) process_tx_packet();
 		
+		if (IS_RESET) {
+			IS_RESET = 0;
+			reset_game();
+		}
+		
 		if (MOVE_RECEIVED) {
 			
 			EA = 0;  // Disable interrupts
 			MOVE_RECEIVED = 0;
 			EA = 1;  // Re-enable
 			tm_display_digits(MoveSquares[1] + 9 + 1, MoveSquares[0] + 1, MoveSquares[3] + 9 + 1, MoveSquares[2] + 1);
+//			LCD_clear();
+//			LCD_print("Move Received");
+//			LCD_setCursor(1, 0);
+//			LCD_print("Move: ");
+			
 			CurrentMainState = AWAIT_MOVE_SET;
 			JustEnteredState = 1;
 		}
@@ -54,15 +90,21 @@ int main(void) {
 			
 			case TURNED_ON:
 				if (JustEnteredState) {
-					tm_display_digits(1, 2, 2, 1);
 					JustEnteredState = 0;
 					set_leds(&OneBoard);
+					LCD_clear();
+					LCD_print("Waiting for");
+					LCD_setCursor(1, 0);
+					LCD_print("Connection..");
+					
 				}
 				
 				if (CONNECTED) {
 					JustEnteredState = 1;
 					DelayCounter = 10;
 					CurrentMainState = AWAIT_INITIAL_POSITION_SET;
+					LCD_clear();
+					LCD_print("Connected..");
 				}
 				break;
 				
@@ -70,7 +112,6 @@ int main(void) {
 			case AWAIT_INITIAL_POSITION_SET:
 				
 				if (JustEnteredState){
-					tm_display_digits(2, 3, 3, 2);
 					if (LED_READY) {
 						JustEnteredState = 0;
 						LED_READY = 0;
