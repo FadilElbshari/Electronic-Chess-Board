@@ -43,10 +43,10 @@ void LCD_write(U8 value) {
 
 void LCD_begin() {
 
-	delay_ms(50);
+	delay_us(50);
 
 	LCD_expanderWrite(LCD_BACKLIGHT);	// reset expanderand turn backlight off (Bit 8 =1)
-	delay_ms(1000);
+	delay_us(1000);
 
 	LCD_write4bits(0x03 << 4);
 	delay_us(4500); // wait min 4.1ms
@@ -67,7 +67,7 @@ void LCD_begin() {
 	
 	LCD_command(LCD_DISPLAYCONTROL); // display off
 	LCD_clear();
-	delay_ms(2);
+	delay_us(2000);
 	LCD_command(0x06); // entry mode
 	LCD_command(0x0C); // display ON
 
@@ -86,7 +86,7 @@ void LCD_home(){
 }
 
 void LCD_print(char *s) {
-	U8 len, i;
+	U8 xdata len, xdata i;
 	len = strlen(s);
 	len = (COLS-len) >> 1;
 	for (i=0; i<len; i++) LCD_write('-');

@@ -3,8 +3,6 @@
 
 #include "types.h"
 
-extern U8 GAME_OVER_INFO; // 0 - STALEMATE, 1 - CHECKMATE
-
 void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass);
 
 void get_pawn_moves(U8 sq, Bitboard *board);

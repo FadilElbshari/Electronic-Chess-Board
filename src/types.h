@@ -1,12 +1,16 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <REG52.H>
 // Type Definitions
 #define BOARD_W 0x08
 #define SHIFT 0x03
 #define MASK BOARD_W - 1
 
 typedef unsigned char U8;
+typedef unsigned int U16;
+typedef bit FLAG;
+
 typedef struct {
 	U8 RANK[BOARD_W];
 } Bitboard;
@@ -25,6 +29,7 @@ typedef enum {
 typedef enum {
 	NONE,
 	LIFT,
+	CAPTURE_REMOVED_FIRST,
 	CAPTURE_INTERMEDIATE
 } DetectionState;
 
@@ -39,6 +44,7 @@ typedef enum {
 #define COLOR_WHITE  0x40
 #define COLOR_BLACK  0x00
 #define TYPE_MASK    0x07
+
 typedef enum {
   TYPE_EMPTY = 0,
   TYPE_PAWN,

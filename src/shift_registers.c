@@ -4,11 +4,13 @@
 #include "config.h"
 #include "hardware.h"
 #include "helpers.h"
-#include "tm_ssd.h"
 #include "bitboard.h"
 
+#define LONG_STABLE_TIME 300
+#define SHORT_STABLE_TIEM 5
 
 
+// Function to compute difference between two bitboards in terms of set and cleared bits
 void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 	U8 i;
 	for (i=0; i<BOARD_W; i++) {
@@ -17,25 +19,36 @@ void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 	}
 }
 
+// Function tracking board changes, mainly implemented to allow piece sliding by setting LONG_STABLE_TIME to 300ms
+bit read_and_verify_sensors(bit isLong) {
+    static Bitboard last;
+    static bit active = 0; // Retains state across function calls
 
-bit read_and_verify_sensors(void) {
-	Bitboard first, second;
-  U8 attempts = 3;
-	
-	while (attempts--) {
-        read_hall_effect_sensors(&first);
-        delay_ms(5);
-        read_hall_effect_sensors(&second);
+    read_hall_effect_sensors(&PolledBoard);
 
-        if (compare_boards(&first, &second)) {
-            PolledBoard = first;
-            return 1;
-        }
+    if (!active) {
+        board_copy(&last, &PolledBoard);
+        settle_timer = isLong ? LONG_STABLE_TIME : SHORT_STABLE_TIME;
+        active = 1;
+        return 0;
     }
+
+    if (!compare_boards(&last, &PolledBoard)) {
+        board_copy(&last, &PolledBoard);
+        settle_timer = isLong ? LONG_STABLE_TIME : SHORT_STABLE_TIME;
+        return 0;
+    }
+
+    if (settle_timer == 0) {
+        active = 0;                  // ready for next detection
+        return 1;
+    }
+
     return 0;
 }
 
 
+// Function responsible for hall effect sensor data shifting logic
 void read_hall_effect_sensors(Bitboard *board) {
 	U8 i, j;
 	U8 value;
@@ -43,7 +56,7 @@ void read_hall_effect_sensors(Bitboard *board) {
 	
 	CLK_ENABLE = 1;
 	SHIFT_nLOAD = 0;
-	tm_delay_us();
+	delay_us(1);
 	SHIFT_nLOAD = 1;
 	clock_gen_parallel();
 	CLK_ENABLE = 0;
@@ -112,8 +125,10 @@ void set_leds(const Bitboard *to_light_up) {
 	clock_gen_serial();
 	MASTER_RESET = 1;
 	
-	tm_delay_us();
+	delay_us(1);
 	
+	
+#if BOARD_W == 8
 	// Top left board
 	for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
 		U8 shift = (U8)(3 - i);
@@ -147,6 +162,8 @@ void set_leds(const Bitboard *to_light_up) {
 		
   }
 	
+#endif
+	
 	// Bottom left board
 	for (i = 0; i < 4; i++) {          // i = bit index (your (3-i))
 		U8 shift = (U8)(3 - i);
@@ -160,18 +177,19 @@ void set_leds(const Bitboard *to_light_up) {
 	
 		LATCH_RELEASE = 0;
 		LATCH_RELEASE = 1;
-		tm_delay_us();
+		delay_us(1);
 		LATCH_RELEASE = 0;
 }
 
 
+// Clock generation functions
 void clock_gen_serial() {
 	SERIAL_CLK = 1;
-	tm_delay_us();
+	delay_us(1);
 	SERIAL_CLK = 0;
 }
 void clock_gen_parallel() {
 	PARALLEL_CLK = 1;
-	tm_delay_us();
+	delay_us(1);
 	PARALLEL_CLK = 0;
 }

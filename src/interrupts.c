@@ -5,38 +5,42 @@
 #include "config.h"
 #include "uart.h"
 #include "bitboard.h"
+#include "helpers.h"
+
+#define STARTING_SQUARE_WHITE_KING 0x04
+#define STARTING_SQUARE_BLACK_KING 0x3C
 
 
-/* ================= Serial ISR variables ================= */
+// Serial interrupt variables - all marked volatile
 
-volatile bit LED_READY = 0;
-volatile bit CONNECTED = 0;
-volatile bit POSITION_DONE = 0;
-volatile bit MOVE_RECEIVED = 0;
-volatile bit IS_RESET = 0;
+volatile FLAG LED_READY = 0;
+volatile FLAG CONNECTED = 0;
+volatile FLAG POSITION_DONE = 0;
+volatile FLAG MOVE_RECEIVED = 0;
+volatile FLAG IS_RESET = 0;
 
-volatile U8 xdata MoveSquares[4] = {0};
+volatile U8 MoveSquares[4] = {0};
 
 volatile ISRState CurrentISRState = NOT_CONNECTED;
-volatile Bitboard xdata DisplayBoardLEDs;
+volatile Bitboard idata DisplayBoardLEDs;
 
 volatile RX_STATE rxState = RX_WAIT_HEADER;
 volatile U8 rxType;
 volatile U8 rxLen;
-volatile U8 rxIndex;
-volatile U8 rxChecksum;
+volatile U8 idata rxIndex;
+volatile U8 idata rxChecksum;
 volatile U8 xdata rxBuffer[MAX_RX_PAYLOAD];
-volatile bit rxPacketReady = 0;
+volatile FLAG RX_PACKET_READY = 0;
 
 
-volatile U8 txHeader;
-volatile U8 txType;
-volatile U8 txLen;
-volatile U8 txChecksum;
-volatile U8 xdata txBuffer[MAX_TX_PAYLOAD];
-volatile bit txPacketReady = 0;
+volatile U8 idata txHeader;
+volatile U8 idata txType;
+volatile U8 idata txLen;
+volatile U8 idata txChecksum;
+volatile U8 idata txBuffer[MAX_TX_PAYLOAD];
+volatile FLAG TX_PACKET_READY = 0;
 
-/* ======================================================== */
+
 
 void serial_ISR(void) interrupt 4 {
     if (RI) {
@@ -44,6 +48,7 @@ void serial_ISR(void) interrupt 4 {
         c = SBUF;
 				RI = 0;
 			
+			// RX state machine
 			switch (rxState) {
 
         case RX_WAIT_HEADER:
@@ -84,7 +89,7 @@ void serial_ISR(void) interrupt 4 {
 
         case RX_WAIT_CHECKSUM:
             if (c == rxChecksum) {
-                rxPacketReady = 1;   // signal main loop
+                RX_PACKET_READY = 1;   // signal main loop
             }
             rxState = RX_WAIT_HEADER; // always reset
             break;
@@ -105,11 +110,13 @@ void serial_ISR(void) interrupt 4 {
 				
 }
 
+
+// Managing received data
 void process_rx_packet(void) {
 	U8 i, j;
 	
-	if (!rxPacketReady) return;
-	rxPacketReady = 0;
+	if (!RX_PACKET_READY) return;
+	RX_PACKET_READY = 0;
 
 	switch (rxType) {
 		case CONNECTION_PACKET:
@@ -126,9 +133,12 @@ void process_rx_packet(void) {
 					bit piece_turn;
 					piece_turn = (c & COLOR_WHITE) != 0;
 					KingSquares[piece_turn] = i;
+					
+					if (i != STARTING_SQUARE_WHITE_KING && i != STARTING_SQUARE_BLACK_KING) KingMoved[piece_turn] = -1;
 				}
 			}
-			COLOR = rxBuffer[i];
+			TURN = rxBuffer[i++] ? WHITE : BLACK;
+			COLOR = rxBuffer[i++] ? WHITE : BLACK;
 			
 			DisplayBoardLEDs.RANK[0] = 0;
 			DisplayBoardLEDs.RANK[1] = 0;
@@ -142,7 +152,7 @@ void process_rx_packet(void) {
 			for (i=0; i<BOARD_W; i++){
 				for (j=0; j<BOARD_W; j++) {
 					if (((BoardState[(i << SHIFT) | j] & TYPE_MASK) != TYPE_EMPTY)) {
-						DisplayBoardLEDs.RANK[i] |= (1 << j);
+						DisplayBoardLEDs.RANK[i] |= BitMask[j];
 					}
 				}
 			}
@@ -163,13 +173,8 @@ void process_rx_packet(void) {
 		
 			for (i=0; i<4; i++) MoveSquares[i] = rxBuffer[i];
 	
-			DisplayBoardLEDs.RANK[MoveSquares[0]] |= 1 << MoveSquares[1];
-			DisplayBoardLEDs.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
-		
-			MoveBoard = CurrentBoard;
-		
-			MoveBoard.RANK[MoveSquares[0]] &= ~(1 << MoveSquares[1]);
-			MoveBoard.RANK[MoveSquares[2]] |= 1 << MoveSquares[3];
+			DisplayBoardLEDs.RANK[MoveSquares[0]] |= BitMask[MoveSquares[1]];
+			DisplayBoardLEDs.RANK[MoveSquares[2]] |= BitMask[MoveSquares[3]];
 		
 			MOVE_RECEIVED = 1;
 			break;
@@ -177,11 +182,11 @@ void process_rx_packet(void) {
 }
 
 
-
+// Managing data to be transmitted
 void process_tx_packet(void) {
 	U8 i, c;
-	if (!txPacketReady) return;
-	txPacketReady = 0;
+	if (!TX_PACKET_READY) return;
+	TX_PACKET_READY = 0;
 	
 	txChecksum = 0;
 	

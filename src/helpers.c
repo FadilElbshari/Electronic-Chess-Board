@@ -3,58 +3,44 @@
 #include <REG52.H>
 #include <intrins.h>
 
-// ==============================================================================
-// =========================Delay Functionality START ===========================
-// ==============================================================================
+// Time counting variables - marked as volatile as managed by ISR of T0
+volatile U16 sys_ms = 0; 
+volatile U16 settle_timer = 0;
+volatile U16 ui_timer = 0;
 
-unsigned int ms_counter = 0;
-
+// Number of set bits for numbers 0-15 (4bit numbers)
 const U8 code pop4[16] = {
     0,1,1,2,1,2,2,3,
     1,2,2,3,2,3,3,4
 };
 
-void timer0_delay1ms(void) {
-    TMOD |= 0x01;
+const U8 code BitMask[8]    = {1,2,4,8,16,32,64,128};
+const U8 code BitMaskClr[8] = {0xFE,0xFD,0xFB,0xF7,0xEF,0xDF,0xBF,0x7F};
+
+// Initialise T0 by loading proper values into relevant registers
+void timer0_init(void) {
+	TMOD &= 0xF0;
+	TMOD |= 0x01;
     
+	TH0 = 0xFC;
+	TL0 = 0x67;
+	
+	ET0 = 1;
+	EA = 1;
+	TR0 = 1;
+}
+
+// T0 interrupt handler
+void timer0_ISR(void) interrupt 1 {
     TH0 = 0xFC;
     TL0 = 0x67;
+    sys_ms++;
 
-    TF0 = 0;
-    TR0 = 1;
-    while(TF0 == 0);
-    TR0 = 0;
+    if (settle_timer) settle_timer--;
+    if (ui_timer)     ui_timer--;
 }
 
-//void timer0_init(void) {
-//	TMOD &= 0xF0;
-//	TMOD |= 0x01;
-//    
-//	TH0 = 0xFC;
-//	TL0 = 0x67;
-//	
-//	ET0 = 1;
-//	EA = 1;
-//	TR0 = 1;
-//	
-//	ms_counter = 0;
-//}
-
-//void timer0_ISR(void) interrupt 1 {
-//	TH0 = 0xFC;
-//	TL0 = 0x67;
-//	
-//	if (ms_counter > 0) ms_counter--;
-//}
-
-
-void delay_ms(unsigned int ms) {
-    unsigned int i;
-    for(i = 0; i < ms; i++) {
-        timer0_delay1ms();
-    }
-}
-
+// Optimised function to retrieve number of set bits per bitboard (8x8 bits)
 U8 get_bit_count(const Bitboard *board) {
 		return BITCOUNT8(board->RANK[0]) +
 				BITCOUNT8(board->RANK[1]) +
@@ -66,12 +52,12 @@ U8 get_bit_count(const Bitboard *board) {
 				BITCOUNT8(board->RANK[7]); 
 }
 
-void delay_us(unsigned int d)
-{
+// A function to generate delays in order of microseconds, nop() uses one machine cycle ~1.08usf at 11.0592MHz crystal
+void delay_us(U16 d) {
     while(d--) _nop_();
 }
 
-
-// ==============================================================================
-// =========================Delay Functionality END =============================
-// ==============================================================================
+void board_copy(Bitboard *dst, const Bitboard *src) {
+    U8 i;
+    for (i = 0; i < 8; i++) dst->RANK[i] = src->RANK[i];
+}

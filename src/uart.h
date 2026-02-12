@@ -5,7 +5,7 @@
 
 #define TX_BUF_SIZE 8
 
-extern volatile U8 xdata tx_buf[TX_BUF_SIZE];
+extern volatile U8 idata tx_buf[TX_BUF_SIZE];
 extern volatile U8 tx_head;
 extern volatile U8 tx_tail;
 extern volatile bit tx_busy;

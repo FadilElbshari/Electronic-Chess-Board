@@ -377,11 +377,6 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>STARTUP.A51</FileName>
-              <FileType>2</FileType>
-              <FilePath>.\STARTUP.A51</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\main.c</FilePath>
@@ -422,14 +417,19 @@
               <FilePath>.\src\move_gen.c</FilePath>
             </File>
             <File>
-              <FileName>i2c.c</FileName>
+              <FileName>tasks.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\i2c.c</FilePath>
+              <FilePath>.\src\tasks.c</FilePath>
             </File>
             <File>
-              <FileName>LiquidCrystal_I2C_8051.c</FileName>
+              <FileName>detection.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\LiquidCrystal_I2C_8051.c</FilePath>
+              <FilePath>.\src\detection.c</FilePath>
+            </File>
+            <File>
+              <FileName>STARTUP.A51</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\STARTUP.A51</FilePath>
             </File>
           </Files>
         </Group>
