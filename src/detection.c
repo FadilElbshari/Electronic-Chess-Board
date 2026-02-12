@@ -6,6 +6,7 @@
 #include "shift_registers.h"
 #include "move_gen.h"
 #include "tasks.h"
+#include "tm_ssd.h"
 
 static void go_error(void) {
     CurrentMainState = ERROR_FLASH_ON;
@@ -116,6 +117,16 @@ void task_detecting_state() {
 				}
 				return;
 		}
+			
+			case CAPTURE_REMOVED_FIRST: {
+				// If everything matches again, user put the captured piece back -> cancel
+				CurrentDetectionState = NONE;
+				clear_legal_moves();
+				clear_leds();
+				LiftedCaptureSquare = 0;
+				CurrentMainState = DETECTING;
+				break;
+			}
 	}
 				
 	ui_timer = 20;
@@ -249,15 +260,6 @@ void task_handle_change() {
 		}
 		
 		case CAPTURE_REMOVED_FIRST: {
-			// If everything matches again, user put the captured piece back -> cancel
-			if (left_cnt == 0 && enter_cnt == 0) {
-					CurrentDetectionState = NONE;
-					clear_legal_moves();
-					clear_leds();
-					LiftedCaptureSquare = 0;
-					CurrentMainState = DETECTING;
-					break;
-			}
 			
 			// Still only the captured piece removed: keep prompting
 			if (left_cnt == 1 && enter_cnt == 0) {
@@ -266,9 +268,10 @@ void task_handle_change() {
 			}
 			
 			if (left_cnt == 2 && enter_cnt == 0) {
-				EnteredMask.RANK[LiftedCaptureSquare >> SHIFT] &= BitMaskClr[LiftedCaptureSquare & MASK];
+				LeftMask.RANK[LiftedCaptureSquare >> SHIFT] &= BitMaskClr[LiftedCaptureSquare & MASK];
 				
-				if (!find_first_square(&EnteredMask, &LiftedPieceSquare)) {
+				if (!find_first_square(&LeftMask, &LiftedPieceSquare)) {
+					tm_display_digits(0, 0, 0, 1);
 					go_error();
 					break;
 				}
@@ -276,6 +279,7 @@ void task_handle_change() {
 				// Verify the lifted piece is a valid capturer
 				get_legal_moves(LiftedPieceSquare, &LegalMoves, 0);
 				if (!(LegalMoves.RANK[LiftedCaptureSquare >> SHIFT] & BitMask[LiftedCaptureSquare & MASK])) {
+					tm_display_digits(0, 0, 0, 2);
 					go_error();
 					break;
 				}
