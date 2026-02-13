@@ -6,6 +6,7 @@
 #include "uart.h"
 #include "bitboard.h"
 #include "helpers.h"
+#include "tm_ssd.h"
 
 #define STARTING_SQUARE_WHITE_KING 0x04
 #define STARTING_SQUARE_BLACK_KING 0x3C
@@ -29,7 +30,7 @@ volatile U8 rxType;
 volatile U8 rxLen;
 volatile U8 idata rxIndex;
 volatile U8 idata rxChecksum;
-volatile U8 xdata rxBuffer[MAX_RX_PAYLOAD];
+volatile U8 idata rxBuffer[MAX_RX_PAYLOAD];
 volatile FLAG RX_PACKET_READY = 0;
 
 
@@ -79,13 +80,25 @@ void serial_ISR(void) interrupt 4 {
             
 
         case RX_WAIT_DATA:
-					rxBuffer[rxIndex++] = c;
+					if (rxType == BOARD_PACKET) {
+						if (rxIndex < 64) {
+							BoardState[rxIndex] = c;
+						} else {
+							rxBuffer[rxIndex - 64] = c;
+						}
+						
+						rxIndex++;
+						
+					} else {
+						rxBuffer[rxIndex++] = c;
+					}
+				
 					rxChecksum ^= c;
 
-						if (rxIndex >= rxLen) {
-								rxState = RX_WAIT_CHECKSUM;
-						}
-						break;
+					if (rxIndex >= rxLen) {
+							rxState = RX_WAIT_CHECKSUM;
+					}
+					break;
 
         case RX_WAIT_CHECKSUM:
             if (c == rxChecksum) {
@@ -126,9 +139,8 @@ void process_rx_packet(void) {
 		
 		case BOARD_PACKET:
 			for (i=0; i<BOARD_W*BOARD_W; i++) {
-				U8 c;
-				c = rxBuffer[i];
-				BoardState[i] = c;
+				U8 c = BoardState[i];
+				
 				if ((c & TYPE_MASK) == TYPE_KING) {
 					bit piece_turn;
 					piece_turn = (c & COLOR_WHITE) != 0;
@@ -137,8 +149,8 @@ void process_rx_packet(void) {
 					if (i != STARTING_SQUARE_WHITE_KING && i != STARTING_SQUARE_BLACK_KING) KingMoved[piece_turn] = -1;
 				}
 			}
-			TURN = rxBuffer[i++] ? WHITE : BLACK;
-			COLOR = rxBuffer[i++] ? WHITE : BLACK;
+			TURN = rxBuffer[0] ? WHITE : BLACK;
+			COLOR = rxBuffer[1] ? WHITE : BLACK;
 			
 			DisplayBoardLEDs.RANK[0] = 0;
 			DisplayBoardLEDs.RANK[1] = 0;
@@ -149,6 +161,8 @@ void process_rx_packet(void) {
 			DisplayBoardLEDs.RANK[6] = 0;
 			DisplayBoardLEDs.RANK[7] = 0;
 							
+			
+			tm_display_digits(0, 0, 0, 4);
 			for (i=0; i<BOARD_W; i++){
 				for (j=0; j<BOARD_W; j++) {
 					if (((BoardState[(i << SHIFT) | j] & TYPE_MASK) != TYPE_EMPTY)) {

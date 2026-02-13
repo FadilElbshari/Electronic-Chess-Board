@@ -26,7 +26,7 @@ int main(void) {
 	clear_leds();
 	//LCD_begin();
 	
-	tm_display_digits(1, 2, 3, 4);
+	tm_display_digits(0, 0, 0, 1);
 	
 	ui_timer = 100;
 	while (1) {
@@ -40,6 +40,7 @@ int main(void) {
 				break;
 			
 			case AWAIT_INITIAL_POSITION_SET:
+				tm_display_digits(0, 0, 0, 2);
 				task_await_initpos();
 				break;
 				
@@ -48,6 +49,7 @@ int main(void) {
 				break;
 			
 			case DETECTING:
+				tm_display_digits(0, 0, 0, 3);
 				task_detecting_state();
 				break;
 				

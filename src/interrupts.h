@@ -4,7 +4,7 @@
 #include "types.h"
 
 
-#define MAX_RX_PAYLOAD (BOARD_W * BOARD_W) + 2
+#define MAX_RX_PAYLOAD 5
 #define MAX_TX_PAYLOAD 5
 
 #define HEADER 0xAA
@@ -40,7 +40,7 @@ extern volatile U8 rxType;
 extern volatile U8 rxLen;
 extern volatile U8 idata rxIndex;
 extern volatile U8 idata rxChecksum;
-extern volatile U8 xdata rxBuffer[MAX_RX_PAYLOAD];
+extern volatile U8 idata rxBuffer[MAX_RX_PAYLOAD];
 extern volatile FLAG RX_PACKET_READY;
 
 extern volatile U8 idata txHeader;

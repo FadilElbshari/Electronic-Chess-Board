@@ -25,7 +25,7 @@ extern bit COLOR;
 extern U8 KingSquares[2];
 extern U8 RookMoved[2][2];
 extern U8 KingMoved[2];
-extern U8 idata BoardState[BOARD_W * BOARD_W];
+extern volatile U8 idata BoardState[BOARD_W * BOARD_W];
 
 extern U8 LiftedPieceSquare;
 extern U8 LiftedCaptureSquare;

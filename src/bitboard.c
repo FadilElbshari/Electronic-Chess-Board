@@ -35,7 +35,7 @@ bit COLOR;
 U8 KingSquares[2] = {0, 0};
 U8 RookMoved[2][2] = {{0, 0}, {0, 0}};
 U8 KingMoved[2] = {0, 0};
-U8 idata BoardState[BOARD_W * BOARD_W];
+volatile U8 idata BoardState[BOARD_W * BOARD_W];
 
 
 // Compare two bitboards by checking the RANKs from one against the other
