@@ -20,7 +20,7 @@ void i2c_stop()
 
 void i2c_write(U8 dat)
 {
-    U8 i;
+    U8 idata i;
     for(i=0;i<8;i++)
     {
         LCD_SDA = (dat & 0x80) ? 1 : 0;

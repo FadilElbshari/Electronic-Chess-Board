@@ -11,6 +11,7 @@ U8 CurrentMainState;
 U8 CurrentDetectionState;
 U8 ErrorFlashCount;
 
+
 void reset_game() {
 	JUST_ENTERED_STATE = 1;
 	CurrentMainState = TURNED_ON;
@@ -67,14 +68,11 @@ void task_turnon() {
 }
 
 void task_await_initpos() {
+	U8 i;
 	if (JUST_ENTERED_STATE){
-		if (LED_READY) {
 			JUST_ENTERED_STATE = 0;
-			LED_READY = 0;
 			CurrentBoard = DisplayBoardLEDs;
-			set_leds(&DisplayBoardLEDs);
 			ui_timer = 20;
-		}
 			return;
 	}
 	
@@ -84,7 +82,12 @@ void task_await_initpos() {
 		ui_timer = 20;
 		return;
 	}
-	MATCH = compare_boards(&CurrentBoard, &PolledBoard); 
+	
+	MATCH = compare_boards(&CurrentBoard, &PolledBoard);
+	
+	for (i=0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = CurrentBoard.RANK[i] & ~PolledBoard.RANK[i];
+	
+	set_leds(&DisplayBoardLEDs);	
 	
 	if (!MATCH) {
 		ui_timer = 20;
@@ -92,6 +95,7 @@ void task_await_initpos() {
 	}
 	
 	JUST_ENTERED_STATE = 1;
+	LED_READY = 0;
 	CurrentMainState = DETECTING;
 }
 

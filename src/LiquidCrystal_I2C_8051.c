@@ -86,7 +86,7 @@ void LCD_home(){
 }
 
 void LCD_print(char *s) {
-	U8 xdata len, xdata i;
+	U8 idata len, idata i;
 	len = strlen(s);
 	len = (COLS-len) >> 1;
 	for (i=0; i<len; i++) LCD_write('-');
