@@ -2,11 +2,14 @@
 #define TYPES_H
 
 #include <REG52.H>
-// Type Definitions
+
+// Main Constants
+#define ONLINE
 #define BOARD_W 0x08
 #define SHIFT 0x03
 #define MASK BOARD_W - 1
 
+// Type Definitions
 typedef unsigned char U8;
 typedef unsigned int U16;
 typedef bit FLAG;

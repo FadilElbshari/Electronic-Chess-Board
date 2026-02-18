@@ -35,8 +35,26 @@ bit COLOR;
 U8 KingSquares[2] = {0, 0};
 U8 RookMoved[2][2] = {{0, 0}, {0, 0}};
 U8 KingMoved[2] = {0, 0};
+
+#ifndef ONLINE
+U8 idata BoardState[BOARD_W * BOARD_W] = {
+	ROOK_W, KNIGHT_W, BISHOP_W, QUEEN_W, KING_W, BISHOP_W, KNIGHT_W, ROOK_W,
+	PAWN_W, PAWN_W,   PAWN_W,   PAWN_W,  PAWN_W, PAWN_W,   PAWN_W,   PAWN_W,
+	
+	EMPTY,  EMPTY,    EMPTY,    EMPTY,   EMPTY,  EMPTY,    EMPTY,    EMPTY, 
+	EMPTY,  EMPTY,    EMPTY,    EMPTY,   EMPTY,  EMPTY,    EMPTY,    EMPTY, 
+	EMPTY,  EMPTY,    EMPTY,    EMPTY,   EMPTY,  EMPTY,    EMPTY,    EMPTY, 
+	EMPTY,  EMPTY,    EMPTY,    EMPTY,   EMPTY,  EMPTY,    EMPTY,    EMPTY, 
+	
+	PAWN_B, PAWN_B,   PAWN_B,   PAWN_B,  PAWN_B, PAWN_B,   PAWN_B,   PAWN_B,
+	ROOK_B, KNIGHT_B, BISHOP_B, QUEEN_B, KING_B, BISHOP_B, KNIGHT_B, ROOK_B
+};
+
+#else
+
 volatile U8 idata BoardState[BOARD_W * BOARD_W];
 
+#endif
 
 // Compare two bitboards by checking the RANKs from one against the other
 bit compare_boards(Bitboard *a, Bitboard *b) {

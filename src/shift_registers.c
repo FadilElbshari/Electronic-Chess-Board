@@ -6,10 +6,6 @@
 #include "helpers.h"
 #include "bitboard.h"
 
-#define LONG_STABLE_TIME 300
-#define SHORT_STABLE_TIEM 5
-
-
 // Function to compute difference between two bitboards in terms of set and cleared bits
 void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 	U8 i;
