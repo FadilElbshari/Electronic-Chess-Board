@@ -6,7 +6,7 @@
 #include "hardware.h"
 #include "bitboard.h"
 
-#define LONG_STABLE_TIME 300
+#define LONG_STABLE_TIME 150
 #define SHORT_STABLE_TIME 5
 
 #define SHORT 0

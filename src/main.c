@@ -19,6 +19,7 @@
 
 int main(void) {
 	
+	P0 = 0xff;
 	timer0_init();
 	uart_init();
 	init_shift_reg();
@@ -27,6 +28,7 @@ int main(void) {
 	//LCD_begin();
 	
 	tm_display_digits(0, 0, 0, 1);
+	tm_display_digits(0, 0, 0, 2);
 	
 	ui_timer = 100;
 	while (1) {

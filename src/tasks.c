@@ -70,10 +70,14 @@ void task_turnon() {
 void task_await_initpos() {
 	U8 i;
 	if (JUST_ENTERED_STATE){
+		if (LED_READY) {
 			JUST_ENTERED_STATE = 0;
+			LED_READY = 0;
 			CurrentBoard = DisplayBoardLEDs;
 			ui_timer = 20;
 			return;
+		}
+		return;
 	}
 	
 	if (ui_timer != 0) return;
@@ -196,6 +200,7 @@ void task_gameover() {
 }
 
 void task_error_on() {
+	U8 i;
 	if (JUST_ENTERED_STATE) {
 		JUST_ENTERED_STATE = 0;
 		set_leds(&OneBoard);  // All LEDs on = ERROR
@@ -222,7 +227,9 @@ void task_error_on() {
 			}
 			
 			// Still wrong - show expected position
-			set_leds(&CurrentBoard);  // Show where pieces SHOULD be
+				for (i=0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = CurrentBoard.RANK[i] & ~PolledBoard.RANK[i];
+				set_leds(&DisplayBoardLEDs);	
+			
 			ui_timer = 500;  // Display for 500ms
 			ErrorFlashCount = 0;  // Reset to flash again
 			return;
