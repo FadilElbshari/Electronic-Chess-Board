@@ -81,6 +81,8 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	
 	// Toggle turn
 	if (!isCastling) TURN = !TURN;
+	
+#ifdef ONLINE
 	if (!emit) return;
 	
 	txHeader = HEADER;
@@ -91,6 +93,7 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	txBuffer[1] = ToSquare;
 	
 	TX_PACKET_READY = 1;
+#endif
 }
 
 		

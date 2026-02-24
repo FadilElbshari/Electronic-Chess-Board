@@ -35,7 +35,7 @@ static bit find_first_square(const Bitboard *b, U8 *sq) {
 			U8 x = b->RANK[r];
 			if (x) {
 					U8 f = 0;
-					while ((x & 1u) == 0u) { x >>= 1; f++; }
+					while ((x & 1u) == 0u) { x >>= 1; f++; } // Look for set bit
 					*sq = (r << SHIFT) | f;
 					return 1;
 			}

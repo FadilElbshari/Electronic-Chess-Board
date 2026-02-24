@@ -6,12 +6,15 @@
 #include "shift_registers.h"
 #include "move_gen.h"
 
+#define TIME_BETWEEN_READS 5
+#define FLASHING_RATE 100
+
 FLAG JUST_ENTERED_STATE;
 U8 CurrentMainState;
 U8 CurrentDetectionState;
 U8 ErrorFlashCount;
 
-
+#ifdef ONLINE
 void reset_game() {
 	JUST_ENTERED_STATE = 1;
 	CurrentMainState = TURNED_ON;
@@ -32,8 +35,52 @@ void reset_game() {
 	TURN = WHITE;
 }
 
+#else
+void reset_game() {
+	U8 i, j;
+	
+	JUST_ENTERED_STATE = 1;
+	CurrentMainState = TURNED_ON;
+	CurrentDetectionState = NONE;
+
+	ErrorFlashCount = 0;
+
+	ui_timer = 0;
+	
+	RookMoved[0][0] = 0;
+	RookMoved[0][1] = 0;
+	RookMoved[1][0] = 0;
+	RookMoved[1][1] = 0;
+	
+	KingMoved[0] = 0;
+	KingMoved[1] = 0;
+	
+	DisplayBoardLEDs.RANK[0] = 0;
+	DisplayBoardLEDs.RANK[1] = 0;
+	DisplayBoardLEDs.RANK[2] = 0;
+	DisplayBoardLEDs.RANK[3] = 0;
+	DisplayBoardLEDs.RANK[4] = 0;
+	DisplayBoardLEDs.RANK[5] = 0;
+	DisplayBoardLEDs.RANK[6] = 0;
+	DisplayBoardLEDs.RANK[7] = 0;
+					
+	for (i=0; i<BOARD_W; i++){
+		for (j=0; j<BOARD_W; j++) {
+			if (((BoardState[(i << SHIFT) | j] & TYPE_MASK) != TYPE_EMPTY)) {
+				DisplayBoardLEDs.RANK[i] |= BitMask[j];
+			}
+		}
+	}
+	LED_READY = 1;
+			
+	TURN = WHITE;
+}
+
+#endif
+
 
 void task_handle_flags() {
+	
 	if (RX_PACKET_READY) process_rx_packet();
 	if (TX_PACKET_READY) process_tx_packet();
 	
@@ -58,11 +105,15 @@ void task_turnon() {
 	if (JUST_ENTERED_STATE) {
 		JUST_ENTERED_STATE = 0;
 		set_leds(&OneBoard);
+#ifndef ONLINE
+		JUST_ENTERED_STATE = 1;
+		CurrentMainState = AWAIT_INITIAL_POSITION_SET;
+#endif
 	}
 		
 	if (CONNECTED) {
 		JUST_ENTERED_STATE = 1;
-		ui_timer = 100;
+		ui_timer = 50;
 		CurrentMainState = AWAIT_INITIAL_POSITION_SET;
 	}
 }
@@ -74,7 +125,7 @@ void task_await_initpos() {
 			JUST_ENTERED_STATE = 0;
 			LED_READY = 0;
 			CurrentBoard = DisplayBoardLEDs;
-			ui_timer = 20;
+			ui_timer = TIME_BETWEEN_READS;
 			return;
 		}
 		return;
@@ -83,7 +134,7 @@ void task_await_initpos() {
 	if (ui_timer != 0) return;
 
 	if (!read_and_verify_sensors(SHORT)) {
-		ui_timer = 20;
+		ui_timer = TIME_BETWEEN_READS;
 		return;
 	}
 	
@@ -94,7 +145,7 @@ void task_await_initpos() {
 	set_leds(&DisplayBoardLEDs);	
 	
 	if (!MATCH) {
-		ui_timer = 20;
+		ui_timer = TIME_BETWEEN_READS;
 		return;
 	}
 	
@@ -108,7 +159,7 @@ void task_await_moveset() {
 	if (JUST_ENTERED_STATE) {
 		JUST_ENTERED_STATE = 0;
 		set_leds(&DisplayBoardLEDs);
-		ui_timer = 20;
+		ui_timer = TIME_BETWEEN_READS;
 		return;
 	}
 
@@ -117,7 +168,7 @@ void task_await_moveset() {
 
 	// Try to read sensors
 	if (!read_and_verify_sensors(SHORT)) {
-			ui_timer = 20;
+			ui_timer = TIME_BETWEEN_READS;
 			return;
 	}
 	
@@ -160,42 +211,28 @@ void task_await_moveset() {
 	}
 
 	// Board doesn't match yet - keep waiting
-	ui_timer = 20;
+	ui_timer = TIME_BETWEEN_READS;
 	
 }
 
 
 void task_gameover() {
 	if (JUST_ENTERED_STATE) {
-		Bitboard display_over;
-		U8 square;
+		U8 square, i;
 		
 		JUST_ENTERED_STATE = 0;
 		square = KingSquares[TURN];
 					
 		if (GameOverInfo == 1) {
-			display_over.RANK[0] = 0;
-			display_over.RANK[1] = 0;
-			display_over.RANK[2] = 0;
-			display_over.RANK[3] = 0;
-			display_over.RANK[4] = 0;
-			display_over.RANK[5] = 0;
-			display_over.RANK[6] = 0;
-			display_over.RANK[7] = 0;
-			display_over.RANK[square >> SHIFT] |= BitMask[square & MASK];
-		} else if (GameOverInfo == 0) {
-			display_over.RANK[0] = 0xFF;
-			display_over.RANK[1] = 0xFF;
-			display_over.RANK[2] = 0xFF;
-			display_over.RANK[3] = 0xFF;
-			display_over.RANK[4] = 0xFF;
-			display_over.RANK[5] = 0xFF;
-			display_over.RANK[6] = 0xFF;
-			display_over.RANK[7] = 0xFF;
+			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
+			DisplayBoardLEDs.RANK[square >> SHIFT] |= BitMask[square & MASK];
 			
-			display_over.RANK[square >> SHIFT] &= BitMaskClr[square & MASK];
+		} else if (GameOverInfo == 0) {
+			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
+			DisplayBoardLEDs.RANK[square >> SHIFT] &= BitMaskClr[square & MASK];
+			
 		}
-		set_leds(&display_over);
+		set_leds(&DisplayBoardLEDs);
 	}
 }
 
@@ -221,7 +258,7 @@ void task_error_on() {
 							CurrentDetectionState = NONE;
 							clear_leds();
 							JUST_ENTERED_STATE = 1;
-							ui_timer = 100;
+							ui_timer = FLASHING_RATE;
 							return;
 					}
 			}
@@ -236,7 +273,7 @@ void task_error_on() {
 	}
 		
 	CurrentMainState = ERROR_FLASH_OFF;
-	ui_timer = 100;
+	ui_timer = FLASHING_RATE;
 	JUST_ENTERED_STATE = 1;
 }
 
@@ -248,6 +285,6 @@ void task_error_off() {
 				
 	if (ui_timer != 0) return;
 	CurrentMainState = ERROR_FLASH_ON;
-	ui_timer = 100;
+	ui_timer = FLASHING_RATE;
 	JUST_ENTERED_STATE = 1;
 }

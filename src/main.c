@@ -42,7 +42,6 @@ int main(void) {
 				break;
 			
 			case AWAIT_INITIAL_POSITION_SET:
-				tm_display_digits(0, 0, 0, 2);
 				task_await_initpos();
 				break;
 				
@@ -51,7 +50,6 @@ int main(void) {
 				break;
 			
 			case DETECTING:
-				tm_display_digits(0, 0, 0, 3);
 				task_detecting_state();
 				break;
 				

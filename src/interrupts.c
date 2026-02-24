@@ -20,7 +20,7 @@ volatile FLAG POSITION_DONE = 0;
 volatile FLAG MOVE_RECEIVED = 0;
 volatile FLAG IS_RESET = 0;
 
-volatile U8 MoveSquares[4] = {0};
+volatile U8 MoveSquares[4] = {0, 0, 0, 0};
 
 volatile ISRState CurrentISRState = NOT_CONNECTED;
 volatile Bitboard idata DisplayBoardLEDs;
@@ -152,14 +152,8 @@ void process_rx_packet(void) {
 			TURN = rxBuffer[0] ? WHITE : BLACK;
 			COLOR = rxBuffer[1] ? WHITE : BLACK;
 			
-			DisplayBoardLEDs.RANK[0] = 0;
-			DisplayBoardLEDs.RANK[1] = 0;
-			DisplayBoardLEDs.RANK[2] = 0;
-			DisplayBoardLEDs.RANK[3] = 0;
-			DisplayBoardLEDs.RANK[4] = 0;
-			DisplayBoardLEDs.RANK[5] = 0;
-			DisplayBoardLEDs.RANK[6] = 0;
-			DisplayBoardLEDs.RANK[7] = 0;
+			
+			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
 							
 			
 			tm_display_digits(0, 0, 0, 4);
@@ -176,15 +170,7 @@ void process_rx_packet(void) {
 			
 		
 		case MOVE_PACKET:	
-			DisplayBoardLEDs.RANK[0] = 0;
-			DisplayBoardLEDs.RANK[1] = 0;
-			DisplayBoardLEDs.RANK[2] = 0;
-			DisplayBoardLEDs.RANK[3] = 0;
-			DisplayBoardLEDs.RANK[4] = 0;
-			DisplayBoardLEDs.RANK[5] = 0;
-			DisplayBoardLEDs.RANK[6] = 0;
-			DisplayBoardLEDs.RANK[7] = 0;
-		
+			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
 			for (i=0; i<4; i++) MoveSquares[i] = rxBuffer[i];
 	
 			DisplayBoardLEDs.RANK[MoveSquares[0]] |= BitMask[MoveSquares[1]];
