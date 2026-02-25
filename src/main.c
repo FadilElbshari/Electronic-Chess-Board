@@ -12,23 +12,21 @@
 #include "tm_ssd.h"
 #include "interrupts.h"
 #include "move_gen.h"
-#include "LiquidCrystal_I2C_8051.h"
 #include "tasks.h"
 #include "detection.h"
+#include "lcd.h"
 
 
 int main(void) {
 	
-	P0 = 0xff;
 	timer0_init();
 	uart_init();
 	init_shift_reg();
 	reset_game();
 	clear_leds();
-	//LCD_begin();
+	lcd_init();
 	
-	tm_display_digits(0, 0, 0, 1);
-	tm_display_digits(0, 0, 0, 2);
+	lcd_print("Chess Board");
 	
 	ui_timer = 100;
 	while (1) {
@@ -42,6 +40,7 @@ int main(void) {
 				break;
 			
 			case AWAIT_INITIAL_POSITION_SET:
+				lcd_print("Set Position");
 				task_await_initpos();
 				break;
 				

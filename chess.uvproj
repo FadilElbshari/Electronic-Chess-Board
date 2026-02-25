@@ -431,6 +431,16 @@
               <FileType>2</FileType>
               <FilePath>.\STARTUP.A51</FilePath>
             </File>
+            <File>
+              <FileName>lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\src\lcd.h</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

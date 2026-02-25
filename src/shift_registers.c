@@ -6,10 +6,7 @@
 #include "helpers.h"
 #include "bitboard.h"
 
-<<<<<<< HEAD
 
-=======
->>>>>>> bcdab2758c3d834280d994c4e5048e7cf05d50a5
 // Function to compute difference between two bitboards in terms of set and cleared bits
 void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 	U8 i;
@@ -19,7 +16,7 @@ void get_left_entered(Bitboard *pos_board, Bitboard *new_board) {
 	}
 }
 
-// Function tracking board changes, mainly implemented to allow piece sliding by setting LONG_STABLE_TIME to 300ms
+// Function tracking board changes, mainly implemented to allow piece sliding by setting LONG_STABLE_TIME to 150ms
 bit read_and_verify_sensors(bit isLong) {
     static Bitboard last;
     static bit active = 0; // Retains state across function calls

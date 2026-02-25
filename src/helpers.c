@@ -57,6 +57,11 @@ void delay_us(U16 d) {
     while(d--) _nop_();
 }
 
+void delay_ms(U16 ms) {
+    U16 start = sys_ms;
+    while ((U16)(sys_ms - start) < ms);
+}
+
 void board_copy(Bitboard *dst, const Bitboard *src) {
     U8 i;
     for (i = 0; i < 8; i++) dst->RANK[i] = src->RANK[i];
