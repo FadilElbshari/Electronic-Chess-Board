@@ -82,6 +82,10 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	// Toggle turn
 	if (!isCastling) TURN = !TURN;
 	
+#ifndef ONLINE
+	if (!isCastling) COLOR = !COLOR;
+#endif
+	
 #ifdef ONLINE
 	if (!emit) return;
 	
@@ -114,7 +118,10 @@ void get_legal_moves(U8 sq, Bitboard *legal_board, bit pass) {
 		piece_turn = (from_piece & COLOR_WHITE) != 0;
 
 		if (piece_turn != TURN) return;
+	
+#ifdef ONLINE
 		if (!pass) if (piece_turn != COLOR) return;
+#endif
 
 		// Psuedo legal move generation
     switch (from_piece & TYPE_MASK) {

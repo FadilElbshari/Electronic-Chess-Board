@@ -1,6 +1,5 @@
 #include <REG52.H>
 
-
 // Local Headers
 #include "types.h"
 #include "helpers.h"
@@ -14,19 +13,19 @@
 #include "move_gen.h"
 #include "tasks.h"
 #include "detection.h"
-#include "lcd.h"
 
 
 int main(void) {
 	
 	timer0_init();
 	uart_init();
-	init_shift_reg();
+	
+	// Initialise port 1 as outputs except P1.3 (Input)
+	P1 = 0xFF;
+	P1 &= 0x08;
+	
 	reset_game();
 	clear_leds();
-	lcd_init();
-	
-	lcd_print("Chess Board");
 	
 	ui_timer = 100;
 	while (1) {
@@ -40,7 +39,6 @@ int main(void) {
 				break;
 			
 			case AWAIT_INITIAL_POSITION_SET:
-				lcd_print("Set Position");
 				task_await_initpos();
 				break;
 				

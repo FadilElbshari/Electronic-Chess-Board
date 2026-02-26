@@ -11,6 +11,7 @@
 static void go_error(void) {
     CurrentMainState = ERROR_FLASH_ON;
     CurrentDetectionState = NONE;
+		IN_ERROR = 1;
     LiftedPieceSquare = 0;
     clear_legal_moves();
 }

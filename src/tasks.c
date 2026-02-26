@@ -5,11 +5,13 @@
 #include "helpers.h"
 #include "shift_registers.h"
 #include "move_gen.h"
+#include "tm_ssd.h"
 
 #define TIME_BETWEEN_READS 5
-#define FLASHING_RATE 100
+#define FLASHING_RATE 50
 
 FLAG JUST_ENTERED_STATE;
+FLAG IN_ERROR;
 U8 CurrentMainState;
 U8 CurrentDetectionState;
 U8 ErrorFlashCount;
@@ -19,6 +21,8 @@ void reset_game() {
 	JUST_ENTERED_STATE = 1;
 	CurrentMainState = TURNED_ON;
 	CurrentDetectionState = NONE;
+	
+	IN_ERROR = 0;
 
 	ErrorFlashCount = 0;
 
@@ -74,6 +78,7 @@ void reset_game() {
 	LED_READY = 1;
 			
 	TURN = WHITE;
+	COLOR = WHITE;
 }
 
 #endif
@@ -89,7 +94,7 @@ void task_handle_flags() {
 		reset_game();
 	}
 	
-	if (MOVE_RECEIVED) {
+	if (MOVE_RECEIVED && !IN_ERROR) {
 		
 		EA = 0;  // Disable interrupts
 		MOVE_RECEIVED = 0;
@@ -120,6 +125,7 @@ void task_turnon() {
 
 void task_await_initpos() {
 	U8 i;
+	tm_display_digits(0, 2, 0, 1);
 	if (JUST_ENTERED_STATE){
 		if (LED_READY) {
 			JUST_ENTERED_STATE = 0;
@@ -246,7 +252,7 @@ void task_error_on() {
 		
 	if (ui_timer != 0) return;
 		
-	if (ErrorFlashCount >= 6) {
+	if (ErrorFlashCount >= 4) {
 			ErrorFlashCount = 0;
 			
 			if (read_and_verify_sensors(SHORT)) {
@@ -256,6 +262,8 @@ void task_error_on() {
 							// Board corrected!
 							CurrentMainState = DETECTING;
 							CurrentDetectionState = NONE;
+							IN_ERROR = 0; 
+						
 							clear_leds();
 							JUST_ENTERED_STATE = 1;
 							ui_timer = FLASHING_RATE;
