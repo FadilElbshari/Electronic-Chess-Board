@@ -20,7 +20,7 @@ int main(void) {
 	timer0_init();
 	uart_init();
 	
-	// Initialise port 1 as outputs except P1.3 (Input)
+	// Initialise port 1 pins as outputs except P1.3 (Input)
 	P1 = 0xFF;
 	P1 &= 0x08;
 	

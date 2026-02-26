@@ -161,9 +161,14 @@ void task_await_initpos() {
 }
 
 void task_await_moveset() {
-	
+	U8 i;
 	if (JUST_ENTERED_STATE) {
 		JUST_ENTERED_STATE = 0;
+		
+		for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
+		DisplayBoardLEDs.RANK[MoveSquares[0]] |= BitMask[MoveSquares[1]];
+		DisplayBoardLEDs.RANK[MoveSquares[2]] |= BitMask[MoveSquares[3]];
+		
 		set_leds(&DisplayBoardLEDs);
 		ui_timer = TIME_BETWEEN_READS;
 		return;
@@ -188,7 +193,7 @@ void task_await_moveset() {
 	MATCH = compare_boards(&DisplayBoardLEDs, &PolledBoard);
 
 	if (MATCH) {
-		// Move completed successfully!
+		// Move completed successfully
 		U8 FromRank, FromFile, ToRank, ToFile;
 		
 		// Extract move coordinates from MoveSquares

@@ -170,12 +170,7 @@ void process_rx_packet(void) {
 			
 		
 		case MOVE_PACKET:	
-			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
 			for (i=0; i<4; i++) MoveSquares[i] = rxBuffer[i];
-	
-			DisplayBoardLEDs.RANK[MoveSquares[0]] |= BitMask[MoveSquares[1]];
-			DisplayBoardLEDs.RANK[MoveSquares[2]] |= BitMask[MoveSquares[3]];
-		
 			MOVE_RECEIVED = 1;
 			break;
 	}
