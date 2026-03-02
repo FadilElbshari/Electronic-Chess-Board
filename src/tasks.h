@@ -5,6 +5,7 @@
 
 void reset_game();
 void task_handle_flags();
+void task_handle_polling();
 void task_turnon();
 void task_await_initpos();
 void task_await_moveset();

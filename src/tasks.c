@@ -16,11 +16,17 @@ U8 CurrentMainState;
 U8 CurrentDetectionState;
 U8 ErrorFlashCount;
 
+FLAG BTN_RESYNC_STATE;
+FLAG BTN_ADJUST_ENGINE_STATE;
+
 #ifdef ONLINE
 void reset_game() {
 	JUST_ENTERED_STATE = 1;
 	CurrentMainState = TURNED_ON;
 	CurrentDetectionState = NONE;
+	
+	BTN_RESYNC_STATE = 1;
+	BTN_ADJUST_ENGINE_STATE = 1;
 	
 	IN_ERROR = 0;
 
@@ -82,6 +88,43 @@ void reset_game() {
 }
 
 #endif
+
+void task_handle_polling() {
+	
+	// Check resync button
+	if (!BTN_RESYNC) {
+		delay_ms(15);
+		if (BTN_RESYNC) return;
+		
+		if (BTN_RESYNC_STATE == 1){
+			BTN_RESYNC_STATE = 0;
+			
+			// Send board-state request
+			txHeader = HEADER;
+			txType = BOARD_PACKET;
+			txLen = 0;
+			TX_PACKET_READY = 1;
+			return;
+		}
+	} else {
+		BTN_RESYNC_STATE = 1;
+	}
+	
+	// Check adjust button
+	if (!BTN_ADJUST_ENGINE) {
+		delay_ms(15);
+		if (BTN_ADJUST_ENGINE) return;
+		
+		if (BTN_ADJUST_ENGINE_STATE == 1){
+			BTN_ADJUST_ENGINE_STATE = 0;
+			
+			// Do something
+		}
+	} else {
+		BTN_ADJUST_ENGINE_STATE = 1;
+	}
+	
+}
 
 
 void task_handle_flags() {

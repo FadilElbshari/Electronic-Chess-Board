@@ -22,22 +22,26 @@ int main(void) {
 	uart_init();
 	lcd_init();
 	
-	// Initialise port 1 pins as outputs except P1.3 (Input)
-	P0 = 0xFF;
-	//P0 &= 0x08;
+	// Initialise port 2 pins as outputs except P2.3 (Input)
+	P2 = 0xFF;
+	P2 &= 0x08;
 	
 	P1 = 0xFF;
 	
 	reset_game();
 	clear_leds();
 	
+	lcd_set_cursor(0, 0);
 	lcd_print("Chess Board");
-	tm_display_digits(0, 2, 0, 1);
 	
 	ui_timer = 100;
 	while (1) {
 		
 		task_handle_flags();
+		
+#ifdef ONLINE
+		task_handle_polling();
+#endif
 		
 		switch (CurrentMainState) {
 			
