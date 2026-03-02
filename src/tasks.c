@@ -125,9 +125,10 @@ void task_turnon() {
 
 void task_await_initpos() {
 	U8 i;
-	tm_display_digits(0, 2, 0, 1);
+	
 	if (JUST_ENTERED_STATE){
 		if (LED_READY) {
+			tm_display_digits(0, 2, 0, 1);
 			JUST_ENTERED_STATE = 0;
 			LED_READY = 0;
 			CurrentBoard = DisplayBoardLEDs;

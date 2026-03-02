@@ -3,13 +3,6 @@
 #include "helpers.h"
 #include "hardware.h"
 
-#define LCD_PRINT(str)      \
-{                           \
-    const char code *p = str; \
-    while (*p)              \
-        lcd_putc(*p++);     \
-}
-
 void lcd_enable_pulse() {
   LCD_EN = 1;
   delay_us(1);
@@ -71,7 +64,7 @@ void lcd_putc(char c) {
 	lcd_send_byte(c, 1);
 }
 
-void lcd_print(const char code *str) {
+void lcd_print(const char *str) {
     while (*str) lcd_putc(*str++);
 }
 

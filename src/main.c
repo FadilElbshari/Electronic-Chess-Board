@@ -13,19 +13,26 @@
 #include "move_gen.h"
 #include "tasks.h"
 #include "detection.h"
+#include "lcd.h"
 
 
 int main(void) {
 	
 	timer0_init();
 	uart_init();
+	lcd_init();
 	
 	// Initialise port 1 pins as outputs except P1.3 (Input)
+	P0 = 0xFF;
+	//P0 &= 0x08;
+	
 	P1 = 0xFF;
-	P1 &= 0x08;
 	
 	reset_game();
 	clear_leds();
+	
+	lcd_print("Chess Board");
+	tm_display_digits(0, 2, 0, 1);
 	
 	ui_timer = 100;
 	while (1) {
