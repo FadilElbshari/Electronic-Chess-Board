@@ -7,6 +7,7 @@
 #include "move_gen.h"
 #include "tasks.h"
 #include "tm_ssd.h"
+#include "lcd.h"
 
 static void go_error(void) {
     CurrentMainState = ERROR_FLASH_ON;
@@ -14,6 +15,12 @@ static void go_error(void) {
 		IN_ERROR = 1;
     LiftedPieceSquare = 0;
     clear_legal_moves();
+	
+		lcd_clear();
+		lcd_set_cursor(0, 0);
+		lcd_print("Error Detected");
+		lcd_set_cursor(1, 0);
+		lcd_print("Return Position.");
 }
 
 static void finish_move(U8 to_sq) {

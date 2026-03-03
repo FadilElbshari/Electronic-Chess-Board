@@ -32,10 +32,11 @@ int main(void) {
 	reset_game();
 	clear_leds();
 	
+	lcd_clear();
 	lcd_set_cursor(0, 0);
 	lcd_print("Chess Board");
 	lcd_set_cursor(1, 0);
-	lcd_print("Ready");
+	lcd_print("Please Connect.");
 	
 	
 	ui_timer = 100;

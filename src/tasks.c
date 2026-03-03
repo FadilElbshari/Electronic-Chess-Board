@@ -9,7 +9,7 @@
 #include "lcd.h"
 
 #define TIME_BETWEEN_READS 5
-#define FLASHING_RATE 50
+#define FLASHING_RATE 100
 
 FLAG JUST_ENTERED_STATE;
 FLAG IN_ERROR;
@@ -147,6 +147,9 @@ void task_handle_flags() {
 	if (IS_RESET) {
 		IS_RESET = 0;
 		reset_game();
+		lcd_clear();
+		lcd_set_cursor(0, 0);
+		lcd_print("Game Reset.");
 	}
 	
 	if (MOVE_RECEIVED && !IN_ERROR) {
@@ -175,6 +178,13 @@ void task_turnon() {
 		JUST_ENTERED_STATE = 1;
 		ui_timer = 50;
 		CurrentMainState = AWAIT_INITIAL_POSITION_SET;
+		
+		lcd_clear();
+		lcd_set_cursor(0, 0);
+		lcd_print("Connected");
+		lcd_set_cursor(1, 0);
+		lcd_print("Set Position.");
+		
 	}
 }
 
@@ -214,6 +224,12 @@ void task_await_initpos() {
 	JUST_ENTERED_STATE = 1;
 	LED_READY = 0;
 	CurrentMainState = DETECTING;
+	
+	lcd_clear();
+	lcd_set_cursor(0, 0);
+	lcd_print("Position Complete");
+	lcd_set_cursor(1, 0);
+	lcd_print("Game Ready.");
 }
 
 void task_await_moveset() {
@@ -227,6 +243,17 @@ void task_await_moveset() {
 		
 		set_leds(&DisplayBoardLEDs);
 		ui_timer = TIME_BETWEEN_READS;
+		
+		lcd_clear();
+		lcd_set_cursor(0, 0);
+		lcd_print("Move Received");
+		lcd_set_cursor(1, 0);
+		lcd_print("Move: ");
+		lcd_putc(MoveSquares[1] + 'a');
+		lcd_putc(MoveSquares[0] + '0');
+		lcd_putc(MoveSquares[3] + 'a');
+		lcd_putc(MoveSquares[2] + '0');
+		
 		return;
 	}
 
@@ -274,6 +301,12 @@ void task_await_moveset() {
 		CurrentDetectionState = NONE;
 		JUST_ENTERED_STATE = 1;
 		
+		lcd_clear();
+		lcd_set_cursor(0, 0);
+		lcd_print("Move Complete");
+		lcd_set_cursor(1, 0);
+		lcd_print("Game Ready.");
+		
 		return;
 	}
 
@@ -289,15 +322,23 @@ void task_gameover() {
 		
 		JUST_ENTERED_STATE = 0;
 		square = KingSquares[TURN];
+		
+		lcd_clear();
+		lcd_set_cursor(0, 0);
+		lcd_print("Game Over");
+		lcd_set_cursor(1, 0);
 					
 		if (GameOverInfo == 1) {
 			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
 			DisplayBoardLEDs.RANK[square >> SHIFT] |= BitMask[square & MASK];
 			
+			lcd_print("Check Mate");
+			
 		} else if (GameOverInfo == 0) {
 			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
 			DisplayBoardLEDs.RANK[square >> SHIFT] &= BitMaskClr[square & MASK];
 			
+			lcd_print("Stale Mate");
 		}
 		set_leds(&DisplayBoardLEDs);
 	}
@@ -328,6 +369,12 @@ void task_error_on() {
 							clear_leds();
 							JUST_ENTERED_STATE = 1;
 							ui_timer = FLASHING_RATE;
+						
+							lcd_clear();
+							lcd_set_cursor(0, 0);
+							lcd_print("Error Cleared");
+							lcd_set_cursor(1, 0);
+							lcd_print("Game Ready.");
 							return;
 					}
 			}

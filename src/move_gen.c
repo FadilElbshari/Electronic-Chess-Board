@@ -26,6 +26,8 @@ static const signed char code df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
 #define BLACK_PAWN_START_RANK 6
 
 
+FLAG CASTLING_FINAL = 0;
+
 void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	U8 FromRank, FromFile, r;
 	U8 ToRank, ToFile;
@@ -42,7 +44,7 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	ToFile = ToSquare & MASK;
 	
 	if ((BoardState[(FromRank << SHIFT) | FromFile] & TYPE_MASK) == TYPE_KING) {
-		// Check if the move is short castle
+		// Check if the move is castle
 		if (!KingMoved[TURN] && ((FromFile==4 && ToFile==6) || (FromFile==4 && ToFile==2))) {
 			isCastling = 1;
 			if (ToFile == 6) {
@@ -78,13 +80,20 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	
 	CurrentBoard.RANK[FromRank] &= BitMaskClr[FromFile];
 	CurrentBoard.RANK[ToRank] |= BitMask[ToFile];
+
 	
-	// Toggle turn
-	if (!isCastling) TURN = !TURN;
-	
+	if (!isCastling) {
+		 TURN = !TURN;
 #ifndef ONLINE
-	if (!isCastling) COLOR = !COLOR;
+		 COLOR = !COLOR;
+		 if (CASTLING_FINAL) {
+			 CASTLING_FINAL = 0;
+			 TX_PACKET_READY  = 1;
+		 }
 #endif
+	} else {
+		CASTLING_FINAL = 1;
+	}
 	
 #ifdef ONLINE
 	if (!emit) return;
@@ -96,7 +105,7 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	txBuffer[0] = LiftedPieceSquare;
 	txBuffer[1] = ToSquare;
 	
-	TX_PACKET_READY  = 1;
+	if (!isCastling) TX_PACKET_READY  = 1;
 #endif
 }
 

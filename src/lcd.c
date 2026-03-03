@@ -78,3 +78,9 @@ void lcd_set_cursor(U8 row, U8 col) {
 
   lcd_send_byte(address, 0);
 }
+
+void lcd_clear(void)
+{
+    lcd_send_byte(0x01, 0);
+    delay_ms(2);
+}
