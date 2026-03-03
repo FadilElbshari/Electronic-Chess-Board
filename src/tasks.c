@@ -6,6 +6,7 @@
 #include "shift_registers.h"
 #include "move_gen.h"
 #include "tm_ssd.h"
+#include "lcd.h"
 
 #define TIME_BETWEEN_READS 5
 #define FLASHING_RATE 50
@@ -104,6 +105,9 @@ void task_handle_polling() {
 			txType = BOARD_PACKET;
 			txLen = 0;
 			TX_PACKET_READY = 1;
+		
+			lcd_set_cursor(0, 0);
+			lcd_print("Resync Requested");
 			return;
 		}
 	} else {
@@ -123,6 +127,9 @@ void task_handle_polling() {
 			txType = ENGINE_PACKET;
 			txLen = 0;
 			TX_PACKET_READY = 1;
+			
+			lcd_set_cursor(0, 0);
+			lcd_print("Engine Altered");
 			return;
 		}
 	} else {

@@ -64,7 +64,7 @@ void lcd_putc(char c) {
 	lcd_send_byte(c, 1);
 }
 
-void lcd_print(const char *str) {
+void lcd_print(const char code *str) {
     while (*str) lcd_putc(*str++);
 }
 

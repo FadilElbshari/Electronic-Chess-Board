@@ -96,7 +96,7 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	txBuffer[0] = LiftedPieceSquare;
 	txBuffer[1] = ToSquare;
 	
-	TX_PACKET_READY = 1;
+	TX_PACKET_READY  = 1;
 #endif
 }
 

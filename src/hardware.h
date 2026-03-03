@@ -11,6 +11,7 @@
 		sbit SSD_DIO = P0^0;
 		sbit SSD_CLK = P0^1;
 		
+
 		sbit LCD_RS = P0^2;
 		sbit LCD_EN = P0^3;
 		sbit LCD_D4 = P0^4;

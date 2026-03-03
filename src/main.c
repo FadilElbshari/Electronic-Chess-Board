@@ -27,12 +27,16 @@ int main(void) {
 	P2 &= 0x08;
 	
 	P1 = 0xFF;
+	P0 = 0xFF;
 	
 	reset_game();
 	clear_leds();
 	
 	lcd_set_cursor(0, 0);
 	lcd_print("Chess Board");
+	lcd_set_cursor(1, 0);
+	lcd_print("Ready");
+	
 	
 	ui_timer = 100;
 	while (1) {
