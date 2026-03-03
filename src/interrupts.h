@@ -11,6 +11,7 @@
 #define CONNECTION_PACKET 0x01
 #define BOARD_PACKET 0x02
 #define MOVE_PACKET 0x03
+#define ENGINE_PACKET 0x04
  
  typedef enum {
     RX_WAIT_HEADER,

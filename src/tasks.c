@@ -118,7 +118,12 @@ void task_handle_polling() {
 		if (BTN_ADJUST_ENGINE_STATE == 1){
 			BTN_ADJUST_ENGINE_STATE = 0;
 			
-			// Do something
+			// Send engine adjust request
+			txHeader = HEADER;
+			txType = ENGINE_PACKET;
+			txLen = 0;
+			TX_PACKET_READY = 1;
+			return;
 		}
 	} else {
 		BTN_ADJUST_ENGINE_STATE = 1;
