@@ -250,9 +250,9 @@ void task_await_moveset() {
 		lcd_set_cursor(1, 0);
 		lcd_print("Move: ");
 		lcd_putc(MoveSquares[1] + 'a');
-		lcd_putc(MoveSquares[0] + '0');
+		lcd_putc(MoveSquares[0] + '1');
 		lcd_putc(MoveSquares[3] + 'a');
-		lcd_putc(MoveSquares[2] + '0');
+		lcd_putc(MoveSquares[2] + '1');
 		
 		return;
 	}
@@ -306,6 +306,11 @@ void task_await_moveset() {
 		lcd_print("Move Complete");
 		lcd_set_cursor(1, 0);
 		lcd_print("Game Ready.");
+		
+		if (is_game_over()) {
+        CurrentMainState = GAME_IS_OVER;
+        JUST_ENTERED_STATE = 1;
+    }
 		
 		return;
 	}

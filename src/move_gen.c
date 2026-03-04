@@ -84,7 +84,7 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	
 	if (!isCastling) {
 		 TURN = !TURN;
-#ifndef ONLINE
+#ifdef ONLINE
 		 COLOR = !COLOR;
 		 if (CASTLING_FINAL) {
 			 CASTLING_FINAL = 0;
