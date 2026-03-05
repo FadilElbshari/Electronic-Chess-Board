@@ -25,8 +25,14 @@ static const signed char code df_knight[8] = { -1,  1, -2,  2, -2,  2, -1,  1 };
 #define WHITE_PAWN_START_RANK 1
 #define BLACK_PAWN_START_RANK 6
 
+#define WHITE_PROMOTION_RANK 7
+#define BLACK_PROMOTION_RANK 0
+
 
 FLAG CASTLING_FINAL = 0;
+FLAG EN_PASSANT_FLAG = 0;
+
+U8 EnPassantSquare = 0;
 
 void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 	U8 FromRank, FromFile, r;
@@ -75,11 +81,46 @@ void apply_move(U8 FromSquare, U8 ToSquare, bit emit) {
 		RookMoved[TURN][FromFile > 4 ? SHORT_ROOK : LONG_ROOK] = 1;
 	}
 	
-	BoardState[ToSquare] = BoardState[(FromRank << SHIFT) | FromFile];
+	
+	r = BoardState[(FromRank << SHIFT) | FromFile];
+	
+
+	if ((r & TYPE_MASK) == TYPE_PAWN && (ToRank == WHITE_PROMOTION_RANK || ToRank == BLACK_PROMOTION_RANK)) {
+		BoardState[ToSquare] = TYPE_QUEEN | (r & COLOR_WHITE);
+	} else {
+		BoardState[ToSquare] = r;
+	}
 	BoardState[FromSquare] = EMPTY;
 	
 	CurrentBoard.RANK[FromRank] &= BitMaskClr[FromFile];
 	CurrentBoard.RANK[ToRank] |= BitMask[ToFile];
+	
+	// Clear missed pawn due to En-Passant
+	if (EN_PASSANT_FLAG) {
+		// Check if white
+		if ((r & COLOR_WHITE) != 0) {
+			BoardState[((ToRank - 1) << SHIFT) | ToFile] = EMPTY;
+			CurrentBoard.RANK[ToRank - 1] &= BitMaskClr[ToFile];
+		} else {
+			BoardState[((ToRank + 1) << SHIFT) | ToFile] = EMPTY;
+			CurrentBoard.RANK[ToRank + 1] &= BitMaskClr[ToFile];
+		}
+	}
+	
+	
+	EN_PASSANT_FLAG = 0;
+	
+	// Double pawn push
+	if ((r & TYPE_MASK) == TYPE_PAWN && ((ToRank == FromRank + 2) || (FromRank == ToRank + 2))) {
+		EN_PASSANT_FLAG = 1;
+		
+		// Check if white
+		if ((r & COLOR_WHITE) != 0) {
+			EnPassantSquare = ((ToRank - 1) << SHIFT) | ToFile;
+		} else {
+			EnPassantSquare = ((ToRank + 1) << SHIFT) | ToFile;
+		}
+	}
 
 	
 	if (!isCastling) {
@@ -250,12 +291,20 @@ void get_pawn_moves(U8 sq, Bitboard *board) {
 	if (file > 0 && new_rank < BOARD_W) {
 		new_sq = sq + step - 1; // LEFT CAPTURE - WHTIE
 		target = BoardState[new_sq];
+		
+		if (EN_PASSANT_FLAG){
+			if (new_sq == EnPassantSquare) board->RANK[new_rank] |= BitMask[file-1];
+		}
 		if ((target & TYPE_MASK) != TYPE_EMPTY && (target & COLOR_WHITE) != color) board->RANK[new_rank] |= BitMask[file-1]; 
 	}
 		
 	if (file < BOARD_W - 1 && new_rank < BOARD_W) {
 		new_sq = sq + step + 1; // RIGHT CAPTURE - WHTIE
 		target = BoardState[new_sq];
+		
+		if (EN_PASSANT_FLAG){
+			if (new_sq == EnPassantSquare) board->RANK[new_rank] |= BitMask[file+1];
+		}
 		if ((target & TYPE_MASK) != TYPE_EMPTY && (target & COLOR_WHITE) != color) board->RANK[new_rank] |= BitMask[file+1]; 
 	}
 	
