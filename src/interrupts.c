@@ -156,7 +156,7 @@ void process_rx_packet(void) {
 			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
 							
 			
-			tm_display_digits(0, 0, 0, 4);
+			//tm_display_digits(0, 0, 0, 4);
 			for (i=0; i<BOARD_W; i++){
 				for (j=0; j<BOARD_W; j++) {
 					if (((BoardState[(i << SHIFT) | j] & TYPE_MASK) != TYPE_EMPTY)) {

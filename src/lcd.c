@@ -29,7 +29,7 @@ void lcd_send_byte(U8 value, bit isData) {
 }
 
 void lcd_init() {
-  delay_ms(20);
+  delay_ms(40);
 
   LCD_RS = 0;
   LCD_EN = 0;

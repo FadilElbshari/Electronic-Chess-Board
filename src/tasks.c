@@ -18,7 +18,7 @@ U8 CurrentDetectionState;
 U8 ErrorFlashCount;
 
 FLAG BTN_RESYNC_STATE;
-FLAG BTN_ADJUST_ENGINE_STATE;
+FLAG BTN_UNDO_STATE;
 
 #ifdef ONLINE
 void reset_game() {
@@ -27,7 +27,7 @@ void reset_game() {
 	CurrentDetectionState = NONE;
 	
 	BTN_RESYNC_STATE = 1;
-	BTN_ADJUST_ENGINE_STATE = 1;
+	BTN_UNDO_STATE = 1;
 	
 	IN_ERROR = 0;
 
@@ -115,25 +115,25 @@ void task_handle_polling() {
 	}
 	
 	// Check adjust button
-	if (!BTN_ADJUST_ENGINE) {
+	if (!BTN_UNDO) {
 		delay_ms(15);
-		if (BTN_ADJUST_ENGINE) return;
+		if (BTN_UNDO) return;
 		
-		if (BTN_ADJUST_ENGINE_STATE == 1){
-			BTN_ADJUST_ENGINE_STATE = 0;
+		if (BTN_UNDO_STATE == 1){
+			BTN_UNDO_STATE = 0;
 			
-			// Send engine adjust request
+			// Undo move
 			txHeader = HEADER;
 			txType = ENGINE_PACKET;
 			txLen = 0;
 			TX_PACKET_READY = 1;
 			
 			lcd_set_cursor(0, 0);
-			lcd_print("Engine Altered");
+			lcd_print("Move Undone");
 			return;
 		}
 	} else {
-		BTN_ADJUST_ENGINE_STATE = 1;
+		BTN_UNDO_STATE = 1;
 	}
 	
 }
@@ -193,7 +193,7 @@ void task_await_initpos() {
 	
 	if (JUST_ENTERED_STATE){
 		if (LED_READY) {
-			tm_display_digits(0, 2, 0, 1);
+			//tm_display_digits(0, 2, 0, 1);
 			JUST_ENTERED_STATE = 0;
 			LED_READY = 0;
 			CurrentBoard = DisplayBoardLEDs;

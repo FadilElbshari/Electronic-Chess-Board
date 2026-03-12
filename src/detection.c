@@ -279,7 +279,7 @@ void task_handle_change() {
 				LeftMask.RANK[LiftedCaptureSquare >> SHIFT] &= BitMaskClr[LiftedCaptureSquare & MASK];
 				
 				if (!find_first_square(&LeftMask, &LiftedPieceSquare)) {
-					tm_display_digits(0, 0, 0, 1);
+					//tm_display_digits(0, 0, 0, 1);
 					go_error();
 					break;
 				}
@@ -287,7 +287,7 @@ void task_handle_change() {
 				// Verify the lifted piece is a valid capturer
 				get_legal_moves(LiftedPieceSquare, &LegalMoves, 0);
 				if (!(LegalMoves.RANK[LiftedCaptureSquare >> SHIFT] & BitMask[LiftedCaptureSquare & MASK])) {
-					tm_display_digits(0, 0, 0, 2);
+					//tm_display_digits(0, 0, 0, 2);
 					go_error();
 					break;
 				}

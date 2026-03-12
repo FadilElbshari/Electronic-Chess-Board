@@ -387,11 +387,6 @@
               <FilePath>.\src\uart.c</FilePath>
             </File>
             <File>
-              <FileName>tm_ssd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\tm_ssd.c</FilePath>
-            </File>
-            <File>
               <FileName>helpers.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\helpers.c</FilePath>
