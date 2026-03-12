@@ -19,6 +19,7 @@ U8 ErrorFlashCount;
 
 FLAG BTN_RESYNC_STATE;
 FLAG BTN_UNDO_STATE;
+FLAG BTN_RESIGN_STATE;
 
 #ifdef ONLINE
 void reset_game() {
@@ -124,16 +125,42 @@ void task_handle_polling() {
 			
 			// Undo move
 			txHeader = HEADER;
-			txType = ENGINE_PACKET;
+			txType = UNDO_PACKET;
 			txLen = 0;
 			TX_PACKET_READY = 1;
 			
 			lcd_set_cursor(0, 0);
-			lcd_print("Move Undone");
+			lcd_print("Undo Requested");
 			return;
 		}
 	} else {
 		BTN_UNDO_STATE = 1;
+	}
+	
+	// Check adjust button
+	if (!BTN_RESIGN) {
+		delay_ms(15);
+		if (BTN_RESIGN) return;
+		
+		if (BTN_RESIGN_STATE == 1){
+			BTN_RESIGN_STATE = 0;
+			
+			// Resign
+			txHeader = HEADER;
+			txType = RESIGN_PACKET;
+			txLen = 0;
+			TX_PACKET_READY = 1;
+			
+			CurrentMainState = GAME_IS_OVER;
+			GameOverInfo = 2;
+			
+			
+			lcd_set_cursor(0, 0);
+			lcd_print("Resign Requested");
+			return;
+		}
+	} else {
+		BTN_RESIGN_STATE = 1;
 	}
 	
 }
@@ -333,11 +360,12 @@ void task_gameover() {
 		lcd_print("Game Over");
 		lcd_set_cursor(1, 0);
 					
-		if (GameOverInfo == 1) {
+		if (GameOverInfo == 1 || GameOverInfo == 2) {
 			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
 			DisplayBoardLEDs.RANK[square >> SHIFT] |= BitMask[square & MASK];
 			
-			lcd_print("Check Mate");
+			if (GameOverInfo == 1) lcd_print("Check Mate");
+			else if (GameOverInfo == 2) lcd_print("Resignation");
 			
 		} else if (GameOverInfo == 0) {
 			for (i = 0; i<BOARD_W; i++) DisplayBoardLEDs.RANK[i] = 0;
